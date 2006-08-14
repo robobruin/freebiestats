@@ -6,13 +6,18 @@
 //
 // ==/UserScript==
 
-/**
+/*
 This script is released under Mozilla Public License 1.1, http://www.mozilla.org/MPL/
-
 The purpose is to provide live scoring updates for your default yahoo fantasy baseball team.
 
 For code enhancements or feature requests, visit:
 http://code.google.com/p/freebiestats/issues/list
+
+*--!Important!--*
+The script is set to run on all urls that match
+http://baseball.fantasysports.yahoo.com/*
+So if you're not on you daily stats page, disable it by right-clicking
+on the monkey in the lower right and unchecking the script.
 */
 
 (function () {
