@@ -84,9 +84,11 @@ on the monkey in the lower right and unchecking the script.
             // RBI
             homeStatColumn[(14 + offset * 2)].innerHTML = boxScoreStatColumn[9].innerHTML;
             //avg
-            var avg = (boxScoreStatColumn[7].innerHTML*1 / boxScoreStatColumn[3].innerHTML*1).toFixed(3);
-            avg = (new String(avg).charAt(0) != '1') ? (avg.substring(1,avg.length)) : avg;
-            homeStatColumn[(18 + offset * 2)].innerHTML = avg;
+            if (boxScoreStatColumn[3].innerHTML*1 > 0) {
+                var avg = (boxScoreStatColumn[7].innerHTML*1 / boxScoreStatColumn[3].innerHTML*1).toFixed(3);
+                avg = (new String(avg).charAt(0) != '1') ? (avg.substring(1,avg.length)) : avg;
+                homeStatColumn[(18 + offset * 2)].innerHTML = avg;
+            }
         }
 
         if (boxScoreStatColumn && playerType == PITCHER) {
