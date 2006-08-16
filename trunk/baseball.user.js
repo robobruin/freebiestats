@@ -96,12 +96,12 @@ on the monkey in the lower right and unchecking the script.
             homeStatColumn[(8 + offset * 2)].innerHTML = boxScoreStatColumn[3].innerHTML;
             // W
             var pitcherName = new String(boxScoreStatColumn[1].innerHTML);
-            if (pitcherName.indexOf("W") > -1) {
+            if (pitcherName.indexOf("(W") > -1) {
                 homeStatColumn[(10 + offset * 2)].innerHTML = '1';
             }
             // S
             //children[12].innerHTML = stats.HR;
-            if (pitcherName.indexOf("S") > -1) {
+            if (pitcherName.indexOf("(S") > -1) {
                 homeStatColumn[(12 + offset * 2)].innerHTML = '1';
             }
 
