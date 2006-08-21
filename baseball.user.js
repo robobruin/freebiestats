@@ -97,7 +97,7 @@ on the monkey in the lower right and unchecking the script.
                 stats.K = boxScoreStatColumn[13].innerHTML;
 
                 //ERA
-                var era = boxScoreStatColumn[7].innerHTML * 9 / boxScoreStatColumn[3].innerHTML;
+                var era = boxScoreStatColumn[9].innerHTML * 9 / boxScoreStatColumn[3].innerHTML;
                 stats.ERA = era.toFixed(2);
 
                 //whip
