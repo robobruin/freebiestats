@@ -43,13 +43,13 @@ on the monkey in the lower right and unchecking the script.
                 s = s.replace(/\n/g, ' ');
                 s = s.replace(/^.*<body[^>]*>(.*)<\/body>.*$/gi, "$1");
 
-                var boxScoreStatColumn = processBoxscore(s, playerId);
-                printStats(homeStatColumn, boxScoreStatColumn, offset, playerType);
+                var stats = processBoxscore(s, playerId, playerType);
+                printStats(homeStatColumn, stats, offset, playerType);
             }
         });
     }
 
-    function processBoxscore(html, playerId) {
+    function processBoxscore(html, playerId, playerType) {
         var div = document.getElementById(HIDDEN_DIV_ID);
         if (!div) {
             div = document.createElement("div");
@@ -59,62 +59,101 @@ on the monkey in the lower right and unchecking the script.
         }
 
         div.innerHTML = html;
-        var nodes = xpath(document, "//td[@align='left']/a[@href]");
-        var columns = null;
-        for (var i = 0; i < nodes.snapshotLength; i++) {
-            var playerLink = nodes.snapshotItem(i).getAttribute("href");
-            var _playerId = new String(playerLink);
-            _playerId = _playerId.replace(/[^0-9]/g, '');
+        var nodes = xpath(document, "//tr[contains(@class,'ysprow')]/td/a[contains(@href,'" + playerId + "')]");
+        var i = nodes.snapshotLength;
 
-            if (_playerId == playerId) {
-                columns = nodes.snapshotItem(i).parentNode.parentNode.childNodes;
+        var stats = null;
+
+        if (!i) {
+            return stats;
+        } else {
+            stats = new Object();
+            var boxScoreStatColumn = nodes.snapshotItem(i - 1).parentNode.parentNode.childNodes;
+
+            if (playerType == BATTER) {
+                var playerName = nodes.snapshotItem(i - 1).text.replace('.', '');
+
+                stats.HR = getHRorSB('HR', playerName, document);
+                stats.SB = getHRorSB('SB', playerName, document);
+                stats.HPAB = boxScoreStatColumn[7].innerHTML + '/' + boxScoreStatColumn[3].innerHTML;
+                stats.R = boxScoreStatColumn[5].innerHTML;
+                stats.RBI = boxScoreStatColumn[9].innerHTML;
+
+                if (boxScoreStatColumn[3].innerHTML * 1 > 0) {
+                    var avg = (boxScoreStatColumn[7].innerHTML * 1 / boxScoreStatColumn[3].innerHTML * 1).toFixed(3);
+                    stats.AVG = (new String(avg).charAt(0) != '1') ? (avg.substring(1, avg.length)) : avg;
+                } else {
+                    stats.AVG = '-';
+                }
+            } else if (playerType == PITCHER) {
+                // IP
+                stats.IP = boxScoreStatColumn[3].innerHTML;
+                // W
+                var pitcherName = new String(boxScoreStatColumn[1].innerHTML);
+                stats.W = (pitcherName.indexOf("(W") > -1) ? '1' : '-';
+                // S
+                stats.S = (pitcherName.indexOf("(S") > -1) ? '1' : '-';
+                // K
+                stats.K = boxScoreStatColumn[13].innerHTML;
+
+                //ERA
+                var era = boxScoreStatColumn[7].innerHTML * 9 / boxScoreStatColumn[3].innerHTML;
+                stats.ERA = era.toFixed(2);
+
+                //whip
+                var whip = (boxScoreStatColumn[5].innerHTML * 1 + boxScoreStatColumn[11].innerHTML * 1) / boxScoreStatColumn[3].innerHTML;
+                stats.WHIP = whip.toFixed(2);
             }
+
+            return stats;
         }
-        return columns;
     }
 
-    function printStats(homeStatColumn, boxScoreStatColumn, offset, playerType) {
-        if (boxScoreStatColumn && playerType == BATTER) {
+    function getHRorSB(type, playerName, document) {
+        var nodes = xpath(document, "//td[@class='yspscores' and contains(.,'" + type + "') and contains(.,'" + playerName + "')]");
+        var j = nodes.snapshotLength;
+        var numStat = 0;
+
+        if (j) {
+            var statLine = nodes.snapshotItem(j - 1).textContent;
+            var re = new RegExp(".*(" + playerName + " *\\d?).+", 'gi');
+            statLine = statLine.replace(re, "$1");
+            statLine = statLine.replace(/[^\d]+/, '');
+            numStat = (statLine == '') ? 1 : statLine;
+        }
+        return numStat;
+    }
+
+
+    function printStats(homeStatColumn, stats, offset, playerType) {
+        if (stats && playerType == BATTER) {
             // H/AB
-            homeStatColumn[(8 + offset * 2)].innerHTML = boxScoreStatColumn[7].innerHTML + '/' + boxScoreStatColumn[3].innerHTML;
+            homeStatColumn[(8 + offset * 2)].innerHTML = stats.HPAB;
             // R
-            homeStatColumn[(10 + offset * 2)].innerHTML = boxScoreStatColumn[5].innerHTML;
+            homeStatColumn[(10 + offset * 2)].innerHTML = stats.R;
             // HR
-            //children[12].innerHTML = stats.HR;
+            homeStatColumn[(12 + offset * 2)].innerHTML = stats.HR;
             // RBI
-            homeStatColumn[(14 + offset * 2)].innerHTML = boxScoreStatColumn[9].innerHTML;
+            homeStatColumn[(14 + offset * 2)].innerHTML = stats.RBI;
+            // sb
+            homeStatColumn[(16 + offset * 2)].innerHTML = stats.SB;
             //avg
-            if (boxScoreStatColumn[3].innerHTML*1 > 0) {
-                var avg = (boxScoreStatColumn[7].innerHTML*1 / boxScoreStatColumn[3].innerHTML*1).toFixed(3);
-                avg = (new String(avg).charAt(0) != '1') ? (avg.substring(1,avg.length)) : avg;
-                homeStatColumn[(18 + offset * 2)].innerHTML = avg;
-            }
+            homeStatColumn[(18 + offset * 2)].innerHTML = stats.AVG;
         }
 
-        if (boxScoreStatColumn && playerType == PITCHER) {
+        if (stats && playerType == PITCHER) {
             // IP
-            homeStatColumn[(8 + offset * 2)].innerHTML = boxScoreStatColumn[3].innerHTML;
+            homeStatColumn[(8 + offset * 2)].innerHTML = stats.IP;
             // W
-            var pitcherName = new String(boxScoreStatColumn[1].innerHTML);
-            if (pitcherName.indexOf("(W") > -1) {
-                homeStatColumn[(10 + offset * 2)].innerHTML = '1';
-            }
+            homeStatColumn[(10 + offset * 2)].innerHTML = stats.W;
             // S
-            //children[12].innerHTML = stats.HR;
-            if (pitcherName.indexOf("(S") > -1) {
-                homeStatColumn[(12 + offset * 2)].innerHTML = '1';
-            }
-
+            homeStatColumn[(12 + offset * 2)].innerHTML = stats.S;
             // K
-            homeStatColumn[(14 + offset * 2)].innerHTML = boxScoreStatColumn[13].innerHTML;
-
+            homeStatColumn[(14 + offset * 2)].innerHTML = stats.K;
             //ERA
-            var era = boxScoreStatColumn[7].innerHTML * 9 / boxScoreStatColumn[3].innerHTML;
-            homeStatColumn[(16 + offset * 2)].innerHTML = era.toFixed(2);
-
+            homeStatColumn[(16 + offset * 2)].innerHTML = stats.ERA;
             //whip
-            var whip = (boxScoreStatColumn[5].innerHTML * 1 + boxScoreStatColumn[11].innerHTML * 1) / boxScoreStatColumn[3].innerHTML;
-            homeStatColumn[(18 + offset * 2)].innerHTML = whip.toFixed(2);
+            homeStatColumn[(18 + offset * 2)].innerHTML = stats.WHIP;
         }
     }
 
