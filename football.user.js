@@ -20,6 +20,44 @@ So if you're not on you daily stats page, disable it by right-clicking
 on the monkey in the lower right and unchecking the script.
 */
 
+/*
+Passing Yards (50 yards per point)
+Passing Touchdowns (6)
+Interceptions (-2)
+
+Rushing Yards (20 yards per point)
+Rushing Touchdowns (6)
+
+Reception Yards (20 yards per point)
+Reception Touchdowns (6)
+Return Touchdowns (6)
+2-Point Conversions (2)
+Fumbles Lost (-2)
+Offensive Fumble Return TD (6)
+
+Field Goals 0-19 Yards (3)
+Field Goals 20-29 Yards (3)
+Field Goals 30-39 Yards (3)
+Field Goals 40-49 Yards (4)
+Field Goals 50+ Yards (5)
+Point After Attempt Made (1)
+
+Sack (1)
+Interception (2)
+Fumble Recovery (2)
+Touchdown (6)
+Safety (2)
+Block Kick (2)
+
+Points Allowed 0 points (10)
+Points Allowed 1-6 points (7)
+Points Allowed 7-13 points (4)
+Points Allowed 14-20 points (1)
+Points Allowed 21-27 points (0)
+Points Allowed 28-34 points (-1)
+Points Allowed 35+ points (-4)
+*/
+
 (function () {
 
     var HIDDEN_DIV_ID = 'robobruinDiv';
@@ -92,6 +130,7 @@ on the monkey in the lower right and unchecking the script.
                             int - 19
                         */
                         stats.TD = rows[j].childNodes[17];
+                        break;
                     }
                 }
                 /*
@@ -120,14 +159,6 @@ on the monkey in the lower right and unchecking the script.
                     .getAttribute("href").replace('recap','boxscore');
 
             var fantasyPtsColumn = playerRow.childNodes[10];
-
-
-            /*
-            GM_log(playerName);
-            GM_log(boxScoreLink);
-            GM_log(fantasyPtsColumn.innerHTML);
-              */
-
             getDocument(boxScoreUrl, playerName, fantasyPtsColumn);
         }
     }
