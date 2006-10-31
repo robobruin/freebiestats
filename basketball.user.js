@@ -106,6 +106,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     }
 
     function addModalOverlay() {
+        addListenerStatTracker();
         var div = document.createElement("div");
         document.body.appendChild(div);
         div.id = MODAL_DIV_ID;
@@ -114,15 +115,30 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         '<div><table>' +
             '<tbody id="'+ STAT_BODY_ID+'">' +
             '</tbody>' +
-        '</table>' +
-        "</div>";
+        '</table><a id="roboClose" href="#">close</a></div>';
 
         addGlobalStyle('#' + MODAL_DIV_ID + " {visibility: hidden;position: absolute;left: 0px;top: 0px;width:100%;height:100%;text-align:center;z-index: 200;background: url(\"data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%002%00%00%002%01%03%00%00%00%24%F1%1A%F2%00%00%00%06PLTE%9D%BF%C4%FF%FF%FFo%99%7C%D4%00%00%00%02tRNS%FF%00%E5%B70J%00%00%00%01bKGD%01%FF%02-%DE%00%00%00%09pHYs%00%00%00H%00%00%00H%00F%C9k%3E%00%00%00yIDATx%01%05%C1%01%01%00%00%08%02%20%1C%D9I%07u%A2%13A%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A%F6%01%90%ADD%F3%BDe%02%17%00%00%00%00IEND%AEB%60%82\");}");
         addGlobalStyle('#' + MODAL_DIV_ID + ' div {width:700px;margin: 100px auto;background-color:#fff;border:1px solid #000;padding:15px;text-align:center;z-index:201;}');
         showOverlay();
-        centerPopWin();
 
+        var close = document.getElementById('roboClose');
+        close.addEventListener('click',
+                           function(e) { showOverlay(); },
+                           false);
+        centerPopWin();
         return document.getElementById(STAT_BODY_ID);
+    }
+
+    function addListenerStatTracker() {
+        var nodes = xpath(document, "//a[contains(@target, 'stattracker')]");
+        if (nodes.snapshotLength) {
+            var a = nodes.snapshotItem(0);
+            a.innerHTML = 'Launch FreebieStats!';
+            a.eventListener=null;
+            a.addEventListener('click',
+                           function(e) { showOverlay();return false; },
+                           false);
+        }
     }
 
     function addGlobalStyle(css) {
