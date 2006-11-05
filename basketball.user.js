@@ -23,6 +23,9 @@ credits:-
 http://gabrito.com/files/subModal/
 http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-javascript/
 
+revision
+2006-Nov-05: don't rely on hard coded offset to find boxscore link
+
 */
 
 (function () {
@@ -78,6 +81,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         var statBody = document.getElementById(STAT_BODY_ID);
         if (!statBody) {
             statBody = addModalOverlay();
+            addShowStatsButton();
         }
 
         if (row) {
@@ -126,20 +130,25 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
             var userIdNode = nodes.snapshotItem(i);
             var playerId = userIdNode.getAttribute('href');
             playerId = playerId.replace(/[^0-9]/g, '');
-            var statColumn = userIdNode.parentNode.parentNode.parentNode.childNodes;
-            var position = statColumn[0].innerHTML;
 
+            var row = userIdNode.parentNode.parentNode.parentNode;
+            var position = row.childNodes[0].innerHTML;
 
-            var offset = (statColumn.length == 28) ? 1 : 0;
-
-            if (statColumn[(6 + offset * 2)].childNodes[0].nodeName == 'A') {
-                var boxscoreLink = statColumn[(6 + offset * 2)].childNodes[0].getAttribute("href");
-                boxscoreLink = new String(boxscoreLink).replace('recap', 'boxscore');
-                statColumn[(6 + offset * 2)].childNodes[0].setAttribute("href", boxscoreLink);
-                getDocument(boxscoreLink, playerId, position);
+            //iterate columns to find the boxscore column
+            //start at 1 since we know 0 is BN or position
+            for(var j=1; j < row.childNodes.length; j++) {
+                var column = row.childNodes[j];
+                if (column.className && column.className == 'gametime') {
+                    if (column.childNodes.length && column.childNodes[0].nodeName == 'A') {
+                        var boxscoreLink = column.childNodes[0].getAttribute("href");
+                        boxscoreLink = new String(boxscoreLink).replace('recap', 'boxscore');
+                        column.childNodes[0].setAttribute("href", boxscoreLink);
+                        getDocument(boxscoreLink, playerId, position);
+                    }
+                    break;
+                }
             }
         }
-        addShowStatsButton();
     }
 
     function getViewportHeight() {
