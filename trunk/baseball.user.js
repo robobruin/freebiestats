@@ -22,6 +22,11 @@ on the monkey in the lower right and unchecking the script.
 credits for modal dialog inspiration:
 http://gabrito.com/files/subModal/
 http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-javascript/
+
+Updates
+BugTraq: http://code.google.com/p/freebiestats/issues/list
+2007-04-18: Fixed Issues 4 and 5. Reported by Ethan Herbertson
+
 */
 
 (function () {
@@ -124,7 +129,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
             var statNames;
 
             if (pitcherOrBatter == BATTER) {
-                var hitter = columns[0].childNodes[1].text.replace('.', '');
+                var hitter = columns[0].childNodes[1].text.replace(/(.).+ (.+)/,"$1 $2");
                 stats.HAB = columns[3].innerHTML + '/' + columns[1].innerHTML;
                 stats.R = columns[2].innerHTML;
                 stats.RBI = columns[4].innerHTML;
@@ -141,18 +146,33 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                 statNames = new Array('NAME','HAB','R','HR','RBI','SB','AVG');
             } else {
                 var pitcherName = columns[0].innerHTML;
+
+                stats.NAME = pitcherName;
                 stats.IP = columns[1].innerHTML;
                 stats.W = (pitcherName.indexOf("(W") > -1) ? '1' : '0';
                 stats.S = (pitcherName.indexOf("(S") > -1) ? '1' : '0';
                 stats.K = columns[6].innerHTML;
 
-                var era = columns[4].innerHTML * 9 / columns[1].innerHTML;
-                stats.ERA = era.toFixed(2);
+                if (stats.IP != '-') {
+                    stats.IP.match(/(.+)\.(.)/);
+                    var ip = RegExp.$1;
+                    var outs = RegExp.$2;
 
-                var whip = (columns[2].innerHTML * 1 + columns[5].innerHTML * 1) / columns[1].innerHTML;
-                stats.WHIP = whip.toFixed(2);
-                stats.NAME = pitcherName;
+                    if (outs == '1') {outs = 1/3};
+                    if (outs == '2') {outs = 2/3};
 
+                    ip = parseFloat(ip) + parseFloat(outs);
+                    GM_log(ip);
+
+                    var era = (parseInt(columns[4].innerHTML) * 9) / ip;
+                    stats.ERA = era.toFixed(2);
+
+                    var whip = (parseInt(columns[2].innerHTML) + parseInt(columns[5].innerHTML)) / ip;
+                    stats.WHIP = whip.toFixed(2);
+                } else {
+                    stats.ERA = '-';
+                    stats.WHIP = '-';
+                }
                 statNames = new Array('NAME','IP','W','S','K','ERA','WHIP');
             }
             for (var i=0; i<statNames.length; i++) {
