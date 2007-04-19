@@ -162,8 +162,6 @@ BugTraq: http://code.google.com/p/freebiestats/issues/list
                     if (outs == '2') {outs = 2/3};
 
                     ip = parseFloat(ip) + parseFloat(outs);
-                    GM_log(ip);
-
                     var era = (parseInt(columns[4].innerHTML) * 9) / ip;
                     stats.ERA = era.toFixed(2);
 
