@@ -154,14 +154,9 @@ BugTraq: http://code.google.com/p/freebiestats/issues/list
                 stats.K = columns[6].innerHTML;
 
                 if (stats.IP != '-') {
-                    stats.IP.match(/(.+)\.(.)/);
-                    var ip = RegExp.$1;
-                    var outs = RegExp.$2;
-
-                    if (outs == '1') {outs = 1/3};
-                    if (outs == '2') {outs = 2/3};
-
-                    ip = parseFloat(ip) + parseFloat(outs);
+                    var partialIP = ((stats.IP * 10) % 10);
+                    var ip = (partialIP / 3) + parseInt(stats.IP);
+                    
                     var era = (parseInt(columns[4].innerHTML) * 9) / ip;
                     stats.ERA = era.toFixed(2);
 
