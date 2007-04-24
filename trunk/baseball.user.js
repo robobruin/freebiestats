@@ -44,7 +44,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     Player.prototype.name = function (arg) {if (arguments.length) this._name = arg; else return this._name;}
     Player.prototype.displayName = function (arg) {if (arguments.length) this._displayName = arg; else return this._displayName;}
     Player.prototype.position = function (arg) {if (arguments.length) this._position = arg; else return this._position;}
-    Player.prototype.isOnBench = function () {return (this._position == 'BN');}
+    Player.prototype.isOnBench = function () {return (this._position == 'BN' || this._position == 'DL');}
     Player.prototype.order = function (arg) {if (arguments.length) this._order = parseInt(arg); else return this._order;}
     Player.prototype.h = function (arg) {if (arguments.length) this._h = arg; else return this._h;}
     Player.prototype.isBatter = function () {return this._isBatter;}
@@ -625,5 +625,6 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 //2007-04-18: Fixed Issues 4 and 5. Reported by Ethan Herbertson
 //2007-04-19: Code cleanup and documentation.  Lots of suggestions from Rodric Rabbah. Beginnings of issue 3.
 //2007-04-21: Refactor- Create batter and pitcher classes.
-//2007-04-23: Issue 3,6  Added total stats summary, preserve order of player list, replaced stat tracker link
+//2007-04-23: Issue 3,6  Added total stats summary, preserve order of player list, replaced stat tracker link.
+//2007-04-23: DL players should be treated like BN players
 
