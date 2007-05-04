@@ -120,14 +120,25 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
             return '-';
     }
 
-    function TotalPitcher() {this._displayName = 'TOTAL';}
-    function TotalBatter() {this._displayName = 'TOTAL';}
+    // RMR {
+    /* change TOTAL to total */
+    // function TotalPitcher() {this._displayName = 'TOTAL';}
+    // function TotalBatter() {this._displayName = 'TOTAL';}
+    function TotalPitcher() {this._displayName = 'total';}
+    function TotalBatter() {this._displayName = 'total';}
+    // } RMR
 
     TotalPitcher.prototype = new Pitcher();
     TotalBatter.prototype = new Batter();
 
     TotalBatter.prototype.add = function (player) {
-        if (player.ab() != '-' && player.ab() != 0) {
+        // RMR { 
+        /* may walk or HBP and while not have recorded an AB
+         * may end up with other stats such as SBs or Rs
+         */
+        // if (player.ab() != '-' && player.ab() != 0) {
+        // } RMR
+        if (player.ab() != '-') {
             this._ab += parseInt(player.ab());
             this._h += parseInt(player.h());
             this._r += parseInt(player.r());
@@ -138,6 +149,11 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     }
 
     TotalPitcher.prototype.add = function (player) {
+        // RMR {
+        /* FIXME: will need to relax this condition as well since
+         * pitcher may not record any outs but may have other stats
+         */
+        // } RMR
         if (player.ip() != 0) {
             this._ip += player.ip();
             this._h += parseInt(player.h());
@@ -320,7 +336,10 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
             statNames = new Array('displayName','hab','r','hr','rbi','sb','avg');
         } else {
             totalStats = TOTAL_PITCHER_STATS;
-            statNames = new Array('displayName','displayIP','w','s','k','era','whip');
+            // RMR {
+            /* add loss category */
+            statNames = new Array('displayName','displayIP','w','l','s','k','era','whip');
+            // } RMR
         }
 
         if (!player.isOnBench()) {
@@ -328,6 +347,10 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         }
         var tr = document.createElement("tr");
         var trTotal = document.createElement("tr");
+        // RMR {
+        /* apply special formatting for total row */
+        trTotal.className = 'total';
+        // } RMR
 
         for (var i=0; i<statNames.length; i++) {
             var name = statNames[i];
@@ -373,7 +396,17 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         div.id = MODAL_DIV_ID;
         GM_addStyle('#' + MODAL_DIV_ID + " {text-align:center;position:absolute;left: 0px;top: 0px;width:100%;height:100%;text-align:center;z-index: 200;background: url(\"data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%002%00%00%002%01%03%00%00%00%24%F1%1A%F2%00%00%00%06PLTE%9D%BF%C4%FF%FF%FFo%99%7C%D4%00%00%00%02tRNS%FF%00%E5%B70J%00%00%00%01bKGD%01%FF%02-%DE%00%00%00%09pHYs%00%00%00H%00%00%00H%00F%C9k%3E%00%00%00yIDATx%01%05%C1%01%01%00%00%08%02%20%1C%D9I%07u%A2%13A%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A%F6%01%90%ADD%F3%BDe%02%17%00%00%00%00IEND%AEB%60%82\");}");
         GM_addStyle('#' + MODAL_DIV_ID + ' div {width:500px;margin:100px auto;background-color:#fff;border:1px solid #000;padding:15px;text-align:center;z-index:201;}');
-        GM_addStyle('.roboTable {width:100%;margin-bottom:20px;padding:3px;border-collapse:collapse;border: 1px solid #000;} tr.even {background-color:#f1f2ed;} thead tr {background-color:#ABAB9E;border-bottom:1px solid #000;} td {text-align:center;} tr.bench {background-color: #666;}');
+        // RMR {
+        /* changed the following styles
+         * - added a tr.total class for the line item summary
+         * - changed tr.bench from (background-color: #666) to (background-color:#f1f2ed; font-weight: normal)
+         * - added (font-weight: bold) to tr.even and tr.odd
+         * - added (tr.odd {background-color: white; font-weight: bold;})
+         * - change tr.even color to beige with bold font
+         */
+        // GM_addStyle('.roboTable {width:100%;margin-bottom:20px;padding:3px;border-collapse:collapse;border: 1px solid #000;} tr.even {background-color:#f1f2ed;} thead tr {background-color:#ABAB9E;border-bottom:1px solid #000;} td {text-align:center;} tr.bench {background-color: #666;}');
+        GM_addStyle('.roboTable {width:100%;margin-bottom:20px;padding:3px;border-collapse:collapse;border: 1px solid #000;} tr.odd {background-color:white;font-weight:bold;} tr.even {background-color:beige;font-weight:bold;} thead tr {background-color:#ABAB9E;border-bottom:1px solid #000;} td {text-align:center;} tr.bench {background-color:#f1f2ed;font-weight:normal;} tr.total {background-color:yellow;font-weight:bold}');
+        // } RMR
 
         addCloseAndRefresh();
     }
@@ -387,7 +420,11 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         var close = document.createElement("a");
         close.id ="roboClose";
         close.href = "#";
+        // RMR {
+        /* changed the text for close button */
         close.innerHTML = "Close";
+        close.innerHTML = "[close]";
+        // } RMR
         div.appendChild(close);
 
         close.addEventListener('click',
@@ -397,7 +434,11 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         var refresh = document.createElement("a");
         refresh.id = "roboRefresh";
         refresh.href = "#";
-        refresh.innerHTML = 'Refresh';
+        // RMR {
+        /* changed the text for refresh button */
+        // refresh.innerHTML = 'Refresh';
+        refresh.innerHTML = "[refresh]";
+        // } RMR
         div.appendChild(refresh);
 
         refresh.addEventListener('click',
@@ -421,10 +462,13 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                 '<tbody id="'+ tableId+'">' +
                 '</tbody>';
         } else {
+            // RMR { 
+            /* added loss category (<td width="7%">L</td>) after win category */
             table.innerHTML +=
-                '<thead><tr><td width="23%" height="18" align="left">&nbsp;Name</td><td width="7%">IP</td><td width="7%">W</td><td width="7%">S</td><td width="7%">K</td><td width="7%">ERA</td><td width="7%">WHIP</td></tr></thead>' +
+                '<thead><tr><td width="23%" height="18" align="left">&nbsp;Name</td><td width="7%">IP</td><td width="7%">W</td><td width="7%">L</td><td width="7%">S</td><td width="7%">K</td><td width="7%">ERA</td><td width="7%">WHIP</td></tr></thead>' +
                 '<tbody id="'+ tableId+'">' +
                 '</tbody>';
+            // } RMR
         }
         div.appendChild(table);
         return document.getElementById(tableId);
@@ -449,7 +493,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
             var position = row.childNodes[0].innerHTML;
 
             //iterate columns to find the boxscore column
-            //start at 1 since we know 0 is BN or position
+            //start at 1 since we know 0 is BN/DL or position
             for(var j=1; j < row.childNodes.length; j++) {
                 var column = row.childNodes[j];
                 if (column.className && column.className == 'gametime') {
@@ -461,22 +505,27 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 
                         var statBody;
                         var tableId = STAT_BODY_ID + pitcherOrBatter;
+
+                        // RMR {
+                        /* found the problem related to your creation of a second row: 
+                         * the if-else (else now removed) was not creating a row or the 
+                         * first player in the roster! now that it is fixed
+                         * don't need an extra row 
+                         */
+                        // } RMR
+                        //create row for printing total stats
                         if (iBoxScore == 0) {
                             statBody = setUpTable(tableId, pitcherOrBatter);
                             var totalRow = document.createElement("tr");
                             totalRow.className = 'total';
-                            //not sure why this additional row is required but if I leave it out
-                            //then the total row will overwrite the last bench player's stats.
-                            var totalRow2 = document.createElement("tr");
                             statBody.appendChild(totalRow);
-                            statBody.appendChild(totalRow2);
-                        } else {
-                            statBody = document.getElementById(tableId);
-                            var rows = statBody.getElementsByTagName("TR");
-                            var lastRow = rows[rows.length-1];
-                            var statRow = document.createElement("tr");
-                            statBody.insertBefore(statRow, lastRow);
                         }
+
+                        statBody = document.getElementById(tableId);
+                        var rows = statBody.getElementsByTagName("TR");
+                        var lastRow = rows[rows.length-1];
+                        var statRow = document.createElement("tr");
+                        statBody.insertBefore(statRow, lastRow);
 
                         var player;
 
@@ -627,4 +676,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 //2007-04-21: Refactor- Create batter and pitcher classes.
 //2007-04-23: Issue 3,6  Added total stats summary, preserve order of player list, replaced stat tracker link.
 //2007-04-23: DL players should be treated like BN players
-
+//2007-05-04: Changed table formatting (better choice of colors, bold for active players, highlight total row, relabel buttons) (RMR)
+//2007-05-04: Fixed bug which previously required extra row to be created so that totals row doesn't overwrite player stats (RMR)
+//2007-05-04: Added loss category for pitchers (RMR)
+//2007-05-04: Fixed Issue 12. Accumulate stats from players who don't record an AB but do record other stats (RMR)
