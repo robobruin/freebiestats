@@ -19,7 +19,8 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 */
 
 (function () {
-    if (!location.href.match(/^http\:\/\/baseball\.fantasysports\.yahoo\.com\/b\d\/\d+\/\d+.*/i)) {
+    if (!location.href.match(/^http\:\/\/baseball\.fantasysports\.yahoo\.com\/b\d\/\d+\/\d+.*/i) &&
+	  !location.href.match(/^http\:\/\/baseball\.fantasysports\.yahoo\.com\/b\d\/\d+\/team\?mid=\d+.*/)) {
         return;
     }
     //Globals
