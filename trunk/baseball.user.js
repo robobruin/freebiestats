@@ -88,11 +88,11 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 	  else return '-';
     }
     /* on base percentage ignores hit-by-pitch and sac flys */
-    Batter.prototype.ops = function () {
+    Batter.prototype.obp = function () {
         if ((this._ab + this._bb) > 0) {
-            var ops = ((this._h + this._bb) / (this._ab + this._bb)).toFixed(3);
-            ops = (new String(ops).charAt(0) != '1') ? (ops.substring(1, ops.length)) : ops;
-            return ops;
+            var obp = ((this._h + this._bb) / (this._ab + this._bb)).toFixed(3);
+            obp = (new String(obp).charAt(0) != '1') ? (obp.substring(1, obp.length)) : obp;
+            return obp;
         } 
 	  else return '-';
     }
@@ -687,7 +687,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 //2007-05-04: Fixed Issue 12. Accumulate stats from players who don't record an AB but do record other stats (RMR)
 //2007-05-04: Replaced global TOTAL_PITCHER/BATTER objects with local objects created on every refresh (RMR)
 //2007-05-04: Link player to box score rather than game log (RMR)
-//2007-05-04: Added OPS place holder (calculate it but don't display it; it ignored HBP and Sac Fly so not sure if want to do display it yet) (RMR)
+//2007-05-04: Added OBP place holder (calculate it but don't display it; it ignored HBP and Sac Fly so not sure if want to do display it yet) (RMR)
 //2007-05-04: Verify that pitcher stats accumulated correctly (track full and partial IP seperately) (RMR)
 
 //Bug Log
