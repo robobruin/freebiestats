@@ -28,153 +28,170 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     var STAT_BODY_ID = 'robobruinTableBody';
     var BATTER = 'batter';
     var PITCHER = 'pitcher';
-    var TOTAL_PITCHER_STATS;
-    var TOTAL_BATTER_STATS;
+    // RMR { 
+    /* will create new total batters/picther rows rather
+     * than share a global instance since that causes
+     * data races with multiple refreshes
+     */
+    //var TOTAL_PITCHER_STATS;
+    //var TOTAL_BATTER_STATS;
+    // } RMR
 
+    /* all players */
     function Player() {
         this._playerId = '';
-        this._name = '';
+        this._name     = '';
         this._displayName = '';
         this._position = '';
-        this._order = 0;
-        this._h = 0;
+        this._order    = 0;
+
+        this._h  = 0;
+        this._bb = 0;
+
         this._isBatter = null;
     }
-    Player.prototype.playerId = function (arg) {if (arguments.length) this._playerId = arg; else return this._playerId;}
-    Player.prototype.name = function (arg) {if (arguments.length) this._name = arg; else return this._name;}
+    Player.prototype.playerId    = function (arg) {if (arguments.length) this._playerId    = arg; else return this._playerId;}
+    Player.prototype.name        = function (arg) {if (arguments.length) this._name        = arg; else return this._name;}
     Player.prototype.displayName = function (arg) {if (arguments.length) this._displayName = arg; else return this._displayName;}
-    Player.prototype.position = function (arg) {if (arguments.length) this._position = arg; else return this._position;}
-    Player.prototype.isOnBench = function () {return (this._position == 'BN' || this._position == 'DL');}
-    Player.prototype.order = function (arg) {if (arguments.length) this._order = parseInt(arg); else return this._order;}
-    Player.prototype.h = function (arg) {if (arguments.length) this._h = arg; else return this._h;}
-    Player.prototype.isBatter = function () {return this._isBatter;}
+    Player.prototype.position    = function (arg) {if (arguments.length) this._position    = arg; else return this._position;}
+    Player.prototype.order       = function (arg) {if (arguments.length) this._order = parseInt(arg); else return this._order;}
 
+    Player.prototype.isOnBench   = function ()    {return (this._position == 'BN' || this._position == 'DL');}
+    Player.prototype.isBatter    = function ()    {return this._isBatter;}
+
+    Player.prototype.h           = function (arg) {if (arguments.length) this._h  = parseInt(arg); else return this._h;}
+    Player.prototype.bb          = function (arg) {if (arguments.length) this._bb = parseInt(arg); else return this._bb;}
 
     function Batter() {
-        this._ab = 0;
-        this._r = 0;
-        this._hr = 0;
+        this._ab  = 0;
+        this._r   = 0;
+        this._hr  = 0;
         this._rbi = 0;
-        this._sb = 0;
+        this._sb  = 0;
         this._isBatter = true;
     }
+
+    /* batters */
     Batter.prototype = new Player();
-    Batter.prototype.ab = function (arg) {if (arguments.length) this._ab = arg; else return this._ab;}
-    Batter.prototype.hab = function (arg) {return this._h + '/' + this._ab;}
-    Batter.prototype.r = function (arg) {if (arguments.length) this._r = arg; else return this._r;}
-    Batter.prototype.hr = function (arg) {if (arguments.length) this._hr = arg; else return this._hr;}
-    Batter.prototype.rbi = function (arg) {if (arguments.length) this._rbi= arg; else return this._rbi;}
-    Batter.prototype.sb = function (arg) {if (arguments.length) this._sb = arg; else return this._sb}
+    Batter.prototype.ab  = function (arg) {if (arguments.length) this._ab = parseInt(arg); else return this._ab;}
+    Batter.prototype.r   = function (arg) {if (arguments.length) this._r  = parseInt(arg); else return this._r;}
+    Batter.prototype.hr  = function (arg) {if (arguments.length) this._hr = parseInt(arg); else return this._hr;}
+    Batter.prototype.rbi = function (arg) {if (arguments.length) this._rbi= parseInt(arg); else return this._rbi;}
+    Batter.prototype.sb  = function (arg) {if (arguments.length) this._sb = parseInt(arg); else return this._sb}
+
     Batter.prototype.avg = function () {
-        if (this._ab != '' && this._ab != 0) {
+        if (this._ab > 0) {
             var avg = (this._h / this._ab).toFixed(3);
             avg = (new String(avg).charAt(0) != '1') ? (avg.substring(1, avg.length)) : avg;
             return avg;
-        } else return '-';
+        } 
+	  else return '-';
+    }
+    /* on base percentage ignores hit-by-pitch and sac flys */
+    Batter.prototype.ops = function () {
+        if ((this._ab + this._bb) > 0) {
+            var ops = ((this._h + this._bb) / (this._ab + this._bb)).toFixed(3);
+            ops = (new String(ops).charAt(0) != '1') ? (ops.substring(1, ops.length)) : ops;
+            return ops;
+        } 
+	  else return '-';
+    }
+    Batter.prototype.hab = function () {
+	  return this._h + '/' + this._ab;
     }
 
+    /* pitchers */
     function Pitcher() {
-        this._displayIP = '';
-        this._ip = 0;
+        this._displayIP = '-';
+	  /* keep track of full IP and partial IP 
+	   * from which the IP is calculated
+	   */
+	  this._fullIP = 0;
+	  this._partIP = 0;
+
         this._er = 0;
-        this._w = 0;
-        this._l = 0;
-        this._s = 0;
-        this._k = 0;
-        this._bb = 0;
+        this._k  = 0;
+
+        this._w  = 0;
+        this._l  = 0;
+        this._s  = 0;
         this._isBatter = false;
     }
 
     Pitcher.prototype = new Player();
-    Pitcher.prototype.displayIP = function (arg) {if (arguments.length) this._displayIP = arg; else return this._displayIP;}
-    Pitcher.prototype.er = function (arg) {if (arguments.length) this._er = arg; else return this._er;}
-    Pitcher.prototype.w = function (arg) {if (arguments.length) this._w = arg; else return this._w;}
-    Pitcher.prototype.l = function (arg) {if (arguments.length) this._l = arg; else return this._l;}
-    Pitcher.prototype.s = function (arg) {if (arguments.length) this._s = arg; else return this._s;}
-    Pitcher.prototype.k = function (arg) {if (arguments.length) this._k = arg; else return this._k;}
-    Pitcher.prototype.bb = function (arg) {if (arguments.length) this._bb = arg; else return this._bb;}
+    Pitcher.prototype.displayIP = function (arg) {
+	  if (arguments.length) {
+		this._displayIP = arg; 
+		this._fullIP += parseInt(arg);
+		this._partIP += (arg * 10) % 10;
+	  }
+	  else return this._displayIP;
+    }
+    Pitcher.prototype.er = function (arg) {if (arguments.length) this._er = parseInt(arg); else return this._er;}
+    Pitcher.prototype.w  = function (arg) {if (arguments.length) this._w  = parseInt(arg); else return this._w;}
+    Pitcher.prototype.l  = function (arg) {if (arguments.length) this._l  = parseInt(arg); else return this._l;}
+    Pitcher.prototype.s  = function (arg) {if (arguments.length) this._s  = parseInt(arg); else return this._s;}
+    Pitcher.prototype.k  = function (arg) {if (arguments.length) this._k  = parseInt(arg); else return this._k;}
+
+    /* ip() is used to calculate era and whip */
     Pitcher.prototype.ip = function () {
-        if (this._ip != 0) {return this._ip;}
-        if (this._displayIP != '-' && this._displayIP != 0) {
-            var partialIP = ((this._displayIP * 10) % 10);
-            var ip = (partialIP / 3) + parseInt(this._displayIP);
-            this._ip = ip;
-            return ip;
-        }
-        return 0;
+	  /* calculate IP from raw full and partial IP stats */
+	  var ip  = this._fullIP + (this._partIP / 3);
+	  return ip;
     }
     Pitcher.prototype.era = function () {
         var ip = this.ip();
         if (ip != 0) {
             var era = this._er * 9 / ip;
             return era.toFixed(2);
-        } else
-            return '-';
+        } 
+	  else return '-';
     }
     Pitcher.prototype.whip = function () {
         var ip = this.ip();
         if (ip != 0) {
-            var whip = (parseInt(this._bb) + parseInt(this._h)) / ip;
+            var whip = (this._bb + this._h) / ip;
             return whip.toFixed(2);
-        } else
-            return '-';
+        } 
+	  else return '-';
     }
 
-    // RMR {
-    /* change TOTAL to total */
-    // function TotalPitcher() {this._displayName = 'TOTAL';}
-    // function TotalBatter() {this._displayName = 'TOTAL';}
     function TotalPitcher() {this._displayName = 'total';}
     function TotalBatter() {this._displayName = 'total';}
-    // } RMR
 
     TotalPitcher.prototype = new Pitcher();
     TotalBatter.prototype = new Batter();
 
     TotalBatter.prototype.add = function (player) {
-        // RMR { 
-        /* may walk or HBP and while not have recorded an AB
-         * may end up with other stats such as SBs or Rs
-         */
-        // if (player.ab() != '-' && player.ab() != 0) {
-        // } RMR
-        if (player.ab() != '-') {
-            this._ab += parseInt(player.ab());
-            this._h += parseInt(player.h());
-            this._r += parseInt(player.r());
-            this._hr += parseInt(player.hr());
-            this._sb += parseInt(player.sb());
-            this._rbi += parseInt(player.rbi());
-        }
+	  this._ab  += player.ab();
+	  this._h   += player.h();
+	  this._bb  += player.bb();
+	  this._r   += player.r();
+	  this._hr  += player.hr();
+	  this._sb  += player.sb();
+	  this._rbi += player.rbi();
     }
 
     TotalPitcher.prototype.add = function (player) {
-        // RMR {
-        /* FIXME: will need to relax this condition as well since
-         * pitcher may not record any outs but may have other stats
-         */
-        // } RMR
-        if (player.ip() != 0) {
-            this._ip += player.ip();
-            this._h += parseInt(player.h());
-            this._er += parseInt(player.er());
-            this._w += parseInt(player.w());
-            this._l += parseInt(player.l());
-            this._s += parseInt(player.s());
-            this._k += parseInt(player.k());
-            this._bb += parseInt(player.bb());
-        }
+	  this._fullIP += player._fullIP;
+	  this._partIP += player._partIP;
+	  this._h  += player.h();
+	  this._bb += player.bb();
+	  this._er += player.er();
+	  this._w  += player.w();
+	  this._l  += player.l();
+	  this._s  += player.s();
+	  this._k  += player.k();
     }
 
     TotalPitcher.prototype.displayIP = function () {
-        var intIp = parseInt(this._ip);
-        return (intIp + '.' + parseFloat((this._ip - parseInt(this._ip)) * 3).toFixed(0));
+	  return ((this._fullIP + parseInt(this._partIP / 3)) + '.' + (this._partIP % 3));
     }
 
     /**
      Find all nodes matching an xpath expression
-     @doc document
-     @xpath xpath expression
+     @doc    document
+     @xpath  xpath expression
 
      @return in-order resulting nodes
      */
@@ -184,12 +201,13 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 
     /**
      Wrap greasemonkey's ajax request
-     @url                page to request
-     @player             batter or pitcher object
+     @url         page to request
+     @player      batter or pitcher object
+     @totalStats  total stats for pitchers and battre
 
      @return no return value
      */
-    function getDocument(url, player) {
+    function getDocument(url, player, totalStats) {
         GM_xmlhttpRequest({
             method:"GET",
             url:url,
@@ -203,14 +221,14 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                 s = s.replace(/^.*<style.*<\/style>/gi, ' ');
                 s = s.replace(/^.*<body[^>]*>(.*)<\/body>.*$/gi, "$1");
                 var document = appendToDocument(s);
-                setPlayerStats(document, player);
+                setPlayerStats(url, document, player, totalStats);
             }
         });
     }
 
     /**
      Add hidden content to the DOM so we can run xpath on it
-     @html the raw html that will be part of the DOM
+     @html   the raw html that will be part of the DOM
 
      @return current document
      */
@@ -230,8 +248,8 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
      Find a player's stat row from the boxscore based on their playerId.
      We can use playerId since their name is hyperlinked and that contains the playerId.
      Return the last match to insure we don't get a pitcher's batting stats.
-     @document document to parse
-     @player batter or pitcher object
+     @document  document to parse
+     @player    batter or pitcher object
 
      @return null if no matches, or the last node that matched.
      */
@@ -250,9 +268,9 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     /**
      HR and SB stats appear at the bottom of the boxscore table.
      We need to do a string match on the player since the playerId does not appear.
-     @type SB or HR
-     @playerName name of player
-     @document document to parse
+     @type        SB or HR
+     @playerName  name of player
+     @document    document to parse
 
      @return number of HR or SB
      */
@@ -277,12 +295,14 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 
     /**
      Calculates and appends a player's stats to the resulting table.
-     @document current document
-     @player batter or pitcher object
+     @url         link to box score
+     @document    current document
+     @player      batter or pitcher object
+     @totalStats  total stats for pitchers and battre
 
      @return no return value
      */
-    function setPlayerStats(document, player) {
+    function setPlayerStats(url, document, player, totalStats) {
         var row = processBoxscore(document, player);
 
         if (row) {
@@ -290,19 +310,22 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
             var statNames;
 
             var href = columns[0].childNodes[1].getAttribute('href');
-            columns[0].childNodes[1].setAttribute('href','http://sports.yahoo.com'+ href + '/gamelog');
+            //columns[0].childNodes[1].setAttribute('href','http://sports.yahoo.com'+ href + '/gamelog');
+		columns[0].childNodes[1].setAttribute('href', url);
             columns[0].childNodes[1].setAttribute('target','_blank');
 
             if (player.isBatter()) {
                 var hitter = columns[0].childNodes[1].text.replace(/(.).+ (.+)/,"$1 $2");
                 player.name(hitter);
                 player.displayName(columns[0].innerHTML);
-                player.h(columns[3].innerHTML);
+
                 player.ab(columns[1].innerHTML);
                 player.r(columns[2].innerHTML);
+                player.h(columns[3].innerHTML);
                 player.rbi(columns[4].innerHTML);
-                player.sb(getHRorSB('SB', hitter, document));
+                player.bb(columns[5].innerHTML);
                 player.hr(getHRorSB('HR', hitter, document));
+                player.sb(getHRorSB('SB', hitter, document));
             } else {
                 var pitcherName = columns[0].innerHTML;
                 player.displayName(pitcherName);
@@ -312,45 +335,47 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                 player.bb(columns[5].innerHTML);
                 player.k(columns[6].innerHTML);
 
-                player.w((pitcherName.indexOf("(W") > -1) ? '1' : '0');
-                player.l((pitcherName.indexOf("(L") > -1) ? '1' : '0');
-                player.s((pitcherName.indexOf("(S") > -1) ? '1' : '0');
+                player.w((pitcherName.indexOf("(W") > -1) ? 1 : 0);
+                player.l((pitcherName.indexOf("(L") > -1) ? 1 : 0);
+                player.s((pitcherName.indexOf("(S") > -1) ? 1 : 0);
             }
 
-            updateStatRow(player);
+            updateStatRow(player, totalStats);
         }
     }
 
     /**
      Updates player stat's table.
-     @player player object
+     @player      player object
+     @totalStats  total stats for pitchers and batter
 
      @return no return value
      */
-    function updateStatRow(player) {
+    function updateStatRow(player, totalStats) {
         var totalStats;
         var statNames;
 
+        // RMR { 
+        /* create new total batters/picther rows rather
+         * than share a global instance since that causes
+         * data races with multiple refreshes
+         */
         if (player.isBatter()) {
-            totalStats = TOTAL_BATTER_STATS;
+            //totalStats = TOTAL_BATTER_STATS;
             statNames = new Array('displayName','hab','r','hr','rbi','sb','avg');
         } else {
-            totalStats = TOTAL_PITCHER_STATS;
-            // RMR {
-            /* add loss category */
+            //totalStats = TOTAL_PITCHER_STATS;
             statNames = new Array('displayName','displayIP','w','l','s','k','era','whip');
-            // } RMR
         }
+        // } RMR
 
         if (!player.isOnBench()) {
             totalStats.add(player);
         }
         var tr = document.createElement("tr");
         var trTotal = document.createElement("tr");
-        // RMR {
         /* apply special formatting for total row */
         trTotal.className = 'total';
-        // } RMR
 
         for (var i=0; i<statNames.length; i++) {
             var name = statNames[i];
@@ -370,6 +395,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         var rows = statBody.getElementsByTagName("TR");
 
         tr.className = player.isOnBench() ? 'bench' : (player.order() % 2 == 0) ? 'even' : 'odd';
+
         statBody.replaceChild(tr, rows[player.order()]);
         statBody.replaceChild(trTotal, rows[rows.length-1]);
     }
@@ -396,17 +422,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         div.id = MODAL_DIV_ID;
         GM_addStyle('#' + MODAL_DIV_ID + " {text-align:center;position:absolute;left: 0px;top: 0px;width:100%;height:100%;text-align:center;z-index: 200;background: url(\"data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%002%00%00%002%01%03%00%00%00%24%F1%1A%F2%00%00%00%06PLTE%9D%BF%C4%FF%FF%FFo%99%7C%D4%00%00%00%02tRNS%FF%00%E5%B70J%00%00%00%01bKGD%01%FF%02-%DE%00%00%00%09pHYs%00%00%00H%00%00%00H%00F%C9k%3E%00%00%00yIDATx%01%05%C1%01%01%00%00%08%02%20%1C%D9I%07u%A2%13A%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A%F6%01%90%ADD%F3%BDe%02%17%00%00%00%00IEND%AEB%60%82\");}");
         GM_addStyle('#' + MODAL_DIV_ID + ' div {width:500px;margin:100px auto;background-color:#fff;border:1px solid #000;padding:15px;text-align:center;z-index:201;}');
-        // RMR {
-        /* changed the following styles
-         * - added a tr.total class for the line item summary
-         * - changed tr.bench from (background-color: #666) to (background-color:#f1f2ed; font-weight: normal)
-         * - added (font-weight: bold) to tr.even and tr.odd
-         * - added (tr.odd {background-color: white; font-weight: bold;})
-         * - change tr.even color to beige with bold font
-         */
-        // GM_addStyle('.roboTable {width:100%;margin-bottom:20px;padding:3px;border-collapse:collapse;border: 1px solid #000;} tr.even {background-color:#f1f2ed;} thead tr {background-color:#ABAB9E;border-bottom:1px solid #000;} td {text-align:center;} tr.bench {background-color: #666;}');
         GM_addStyle('.roboTable {width:100%;margin-bottom:20px;padding:3px;border-collapse:collapse;border: 1px solid #000;} tr.odd {background-color:white;font-weight:bold;} tr.even {background-color:beige;font-weight:bold;} thead tr {background-color:#ABAB9E;border-bottom:1px solid #000;} td {text-align:center;} tr.bench {background-color:#f1f2ed;font-weight:normal;} tr.total {background-color:yellow;font-weight:bold}');
-        // } RMR
 
         addCloseAndRefresh();
     }
@@ -420,11 +436,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         var close = document.createElement("a");
         close.id ="roboClose";
         close.href = "#";
-        // RMR {
-        /* changed the text for close button */
-        close.innerHTML = "Close";
         close.innerHTML = "[close]";
-        // } RMR
         div.appendChild(close);
 
         close.addEventListener('click',
@@ -434,11 +446,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         var refresh = document.createElement("a");
         refresh.id = "roboRefresh";
         refresh.href = "#";
-        // RMR {
-        /* changed the text for refresh button */
-        // refresh.innerHTML = 'Refresh';
         refresh.innerHTML = "[refresh]";
-        // } RMR
         div.appendChild(refresh);
 
         refresh.addEventListener('click',
@@ -462,13 +470,10 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                 '<tbody id="'+ tableId+'">' +
                 '</tbody>';
         } else {
-            // RMR { 
-            /* added loss category (<td width="7%">L</td>) after win category */
             table.innerHTML +=
                 '<thead><tr><td width="23%" height="18" align="left">&nbsp;Name</td><td width="7%">IP</td><td width="7%">W</td><td width="7%">L</td><td width="7%">S</td><td width="7%">K</td><td width="7%">ERA</td><td width="7%">WHIP</td></tr></thead>' +
                 '<tbody id="'+ tableId+'">' +
                 '</tbody>';
-            // } RMR
         }
         div.appendChild(table);
         return document.getElementById(tableId);
@@ -477,12 +482,13 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     /**
      From the daily management page, visit each boxscore link if it exists and fire off the processing.
      Create placeholders in the stat table to be filled in after boxscore is processed.
-     @nodes              the player nodes
-     @pitcherOrBatter    PITCHER or BATTER
+     @nodes            the player nodes
+     @pitcherOrBatter  PITCHER or BATTER
+     @totalStats       total stats for pitchers and batter
 
-     @returns no return value
+     @return no return value
      */
-    function processFantasyHome(nodes, pitcherOrBatter) {
+    function processFantasyHome(nodes, pitcherOrBatter, totalStats) {
         var iBoxScore = 0;
         for (var i = 0; i < nodes.snapshotLength; i++) {
             var userIdNode = nodes.snapshotItem(i);
@@ -506,13 +512,6 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                         var statBody;
                         var tableId = STAT_BODY_ID + pitcherOrBatter;
 
-                        // RMR {
-                        /* found the problem related to your creation of a second row: 
-                         * the if-else (else now removed) was not creating a row or the 
-                         * first player in the roster! now that it is fixed
-                         * don't need an extra row 
-                         */
-                        // } RMR
                         //create row for printing total stats
                         if (iBoxScore == 0) {
                             statBody = setUpTable(tableId, pitcherOrBatter);
@@ -539,7 +538,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                         player.order(iBoxScore);
 
                         iBoxScore++;
-                        getDocument(boxscoreLink, player);
+                        getDocument(boxscoreLink, player, totalStats);
                     }
                     break;
                 }
@@ -655,13 +654,19 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     */
     function getStats() {
         setUpModal();
-        TOTAL_BATTER_STATS = new TotalBatter();
-        TOTAL_PITCHER_STATS = new TotalPitcher();
+        // RMR { 
+        /* create new total batters/picther rows rather
+         * than share a global instance since that causes
+         * data races with multiple refreshes
+         */
+        //TOTAL_BATTER_STATS = new TotalBatter();
+        //TOTAL_PITCHER_STATS = new TotalPitcher();
         var nodes = xpath(document, "//table[@id='statTable0']/tbody/tr/td[@class='player']/div/a[@class='name' and @href]");
-        processFantasyHome(nodes, BATTER);
+        processFantasyHome(nodes, BATTER, new TotalBatter());
 
         nodes = xpath(document, "//table[@id='statTable1']/tbody/tr/td[@class='player']/div/a[@class='name' and @href]");
-        processFantasyHome(nodes, PITCHER);
+        processFantasyHome(nodes, PITCHER, new TotalPitcher());
+        // } RMR
         centerPopWin();
         addEvent(window, "resize", centerPopWin);
         addEvent(window, "scroll", centerPopWin);
@@ -680,3 +685,13 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 //2007-05-04: Fixed bug which previously required extra row to be created so that totals row doesn't overwrite player stats (RMR)
 //2007-05-04: Added loss category for pitchers (RMR)
 //2007-05-04: Fixed Issue 12. Accumulate stats from players who don't record an AB but do record other stats (RMR)
+//2007-05-04: Replaced global TOTAL_PITCHER/BATTER objects with local objects created on every refresh (RMR)
+//2007-05-04: Link player to box score rather than game log (RMR)
+//2007-05-04: Added OPS place holder (calculate it but don't display it; it ignored HBP and Sac Fly so not sure if want to do display it yet) (RMR)
+//2007-05-04: Verify that pitcher stats accumulated correctly (track full and partial IP seperately) (RMR)
+
+//Bug Log
+//2007-05-04: Clean up and delete old handles to rows (esp. totals) while removing overlay (FIXME)
+//2007-05-04: Row coloring is tied to boxscore availability and not if player actually plays, so adjacent rows may end up with same color
+//2007-05-04: Handle double header games
+
