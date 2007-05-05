@@ -85,7 +85,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
             avg = (new String(avg).charAt(0) != '1') ? (avg.substring(1, avg.length)) : avg;
             return avg;
         } 
-	  else return '-';
+        else return '-';
     }
     /* on base percentage ignores hit-by-pitch and sac flys */
     Batter.prototype.obp = function () {
@@ -94,20 +94,20 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
             obp = (new String(obp).charAt(0) != '1') ? (obp.substring(1, obp.length)) : obp;
             return obp;
         } 
-	  else return '-';
+        else return '-';
     }
     Batter.prototype.hab = function () {
-	  return this._h + '/' + this._ab;
+        return this._h + '/' + this._ab;
     }
 
     /* pitchers */
     function Pitcher() {
         this._displayIP = '-';
-	  /* keep track of full IP and partial IP 
-	   * from which the IP is calculated
-	   */
-	  this._fullIP = 0;
-	  this._partIP = 0;
+        /* keep track of full IP and partial IP 
+         * from which the IP is calculated
+         */
+        this._fullIP = 0;
+        this._partIP = 0;
 
         this._er = 0;
         this._k  = 0;
@@ -120,12 +120,12 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 
     Pitcher.prototype = new Player();
     Pitcher.prototype.displayIP = function (arg) {
-	  if (arguments.length) {
-		this._displayIP = arg; 
-		this._fullIP += parseInt(arg);
-		this._partIP += (arg * 10) % 10;
-	  }
-	  else return this._displayIP;
+        if (arguments.length) {
+            this._displayIP = arg; 
+            this._fullIP += parseInt(arg);
+            this._partIP += (arg * 10) % 10;
+        }
+        else return this._displayIP;
     }
     Pitcher.prototype.er = function (arg) {if (arguments.length) this._er = parseInt(arg); else return this._er;}
     Pitcher.prototype.w  = function (arg) {if (arguments.length) this._w  = parseInt(arg); else return this._w;}
@@ -135,9 +135,9 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 
     /* ip() is used to calculate era and whip */
     Pitcher.prototype.ip = function () {
-	  /* calculate IP from raw full and partial IP stats */
-	  var ip  = this._fullIP + (this._partIP / 3);
-	  return ip;
+        /* calculate IP from raw full and partial IP stats */
+        var ip  = this._fullIP + (this._partIP / 3);
+        return ip;
     }
     Pitcher.prototype.era = function () {
         var ip = this.ip();
@@ -145,7 +145,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
             var era = this._er * 9 / ip;
             return era.toFixed(2);
         } 
-	  else return '-';
+        else return '-';
     }
     Pitcher.prototype.whip = function () {
         var ip = this.ip();
@@ -153,7 +153,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
             var whip = (this._bb + this._h) / ip;
             return whip.toFixed(2);
         } 
-	  else return '-';
+        else return '-';
     }
 
     function TotalPitcher() {this._displayName = 'total';}
@@ -163,29 +163,29 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     TotalBatter.prototype = new Batter();
 
     TotalBatter.prototype.add = function (player) {
-	  this._ab  += player.ab();
-	  this._h   += player.h();
-	  this._bb  += player.bb();
-	  this._r   += player.r();
-	  this._hr  += player.hr();
-	  this._sb  += player.sb();
-	  this._rbi += player.rbi();
+        this._ab  += player.ab();
+        this._h   += player.h();
+        this._bb  += player.bb();
+        this._r   += player.r();
+        this._hr  += player.hr();
+        this._sb  += player.sb();
+        this._rbi += player.rbi();
     }
 
     TotalPitcher.prototype.add = function (player) {
-	  this._fullIP += player._fullIP;
-	  this._partIP += player._partIP;
-	  this._h  += player.h();
-	  this._bb += player.bb();
-	  this._er += player.er();
-	  this._w  += player.w();
-	  this._l  += player.l();
-	  this._s  += player.s();
-	  this._k  += player.k();
+        this._fullIP += player._fullIP;
+        this._partIP += player._partIP;
+        this._h  += player.h();
+        this._bb += player.bb();
+        this._er += player.er();
+        this._w  += player.w();
+        this._l  += player.l();
+        this._s  += player.s();
+        this._k  += player.k();
     }
 
     TotalPitcher.prototype.displayIP = function () {
-	  return ((this._fullIP + parseInt(this._partIP / 3)) + '.' + (this._partIP % 3));
+        return ((this._fullIP + parseInt(this._partIP / 3)) + '.' + (this._partIP % 3));
     }
 
     /**
@@ -311,7 +311,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 
             var href = columns[0].childNodes[1].getAttribute('href');
             //columns[0].childNodes[1].setAttribute('href','http://sports.yahoo.com'+ href + '/gamelog');
-		columns[0].childNodes[1].setAttribute('href', url);
+            columns[0].childNodes[1].setAttribute('href', url);
             columns[0].childNodes[1].setAttribute('target','_blank');
 
             if (player.isBatter()) {
@@ -398,6 +398,15 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 
         statBody.replaceChild(tr, rows[player.order()]);
         statBody.replaceChild(trTotal, rows[rows.length-1]);
+
+        /* fix up row colors */
+        var trActive = 0;
+        for (i = 0; i < rows.length - 1; i++) {
+            if ((rows[i].childNodes.length > 2) && (rows[i].className != 'bench')) {
+                trActive++;
+                rows[i].className = (trActive % 2) ? 'even' : 'odd';
+            }
+        }
     }
 
     /**
@@ -689,9 +698,9 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 //2007-05-04: Link player to box score rather than game log (RMR)
 //2007-05-04: Added OBP place holder (calculate it but don't display it; it ignored HBP and Sac Fly so not sure if want to do display it yet) (RMR)
 //2007-05-04: Verify that pitcher stats accumulated correctly (track full and partial IP seperately) (RMR)
+//2007-05-05: Fix row coloring so that advacent rows for active roster players are never the same color (RMR
 
 //Bug Log
 //2007-05-04: Clean up and delete old handles to rows (esp. totals) while removing overlay (FIXME)
-//2007-05-04: Row coloring is tied to boxscore availability and not if player actually plays, so adjacent rows may end up with same color
 //2007-05-04: Handle double header games
 
