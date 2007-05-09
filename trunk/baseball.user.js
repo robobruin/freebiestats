@@ -216,7 +216,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     /**
      Setup the modal window
      */
-    function setUpModal() {
+    function setUpModal(date) {
         if (document.getElementById(MODAL_DIV_ID)) {
             document.body.removeChild(document.getElementById(MODAL_DIV_ID));
         }
@@ -231,13 +231,13 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 
         GM_addStyle('.roboTable {width:100%;margin-bottom:20px;padding:3px;border-collapse:collapse;border: 1px solid #000;} tr.odd {background-color:white;font-weight:bold;} tr.even {background-color:beige;font-weight:bold;} thead tr {background-color:#ABAB9E;border-bottom:1px solid #000;} td {text-align:center;} tr.bench {background-color:#f1f2ed;font-weight:normal;} tr.total {background-color:yellow;font-weight:bold}');
 
-        addCloseAndRefresh();
+        addCloseAndRefresh(date);
     }
 
     /**
      Add a close link and refresh to the modal
      */
-    function addCloseAndRefresh() {
+    function addCloseAndRefresh(date) {
         var div = document.getElementById(MODAL_DIV_ID).childNodes[0];
 
         var close = document.createElement("a");
@@ -253,12 +253,19 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         var refresh = document.createElement("a");
         refresh.id = "roboRefresh";
         refresh.href = "#";
-        refresh.innerHTML = "[refresh]";
+
+        if (date) {
+            refresh.innerHTML = date;
+        }
+        else {
+            refresh.innerHTML = "[refresh]";
+            refresh.addEventListener('click',
+                                     function(e) { removeOverlay(); getStats();},
+                                     false);
+        }
+
         div.appendChild(refresh);
 
-        refresh.addEventListener('click',
-                           function(e) { removeOverlay(); getStats();},
-                           false);
         GM_addStyle('#roboRefresh {padding-left:10px;}');
     }
 
@@ -338,7 +345,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
      Show date range for league summary 0-6 days ago 
      */
     function addDateToMenuItem(menuItem, n) {
-        menuItem.addEventListener('click', function(e) {getStats(new Date(), n);}, false);
+        menuItem.addEventListener('click', function(e) {hideDateRange(); getStats(new Date(), n);}, false);
     }
 
     function showDateRange() {
@@ -814,7 +821,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         }
     }
  
-    function getDatePostfix(today, daysAgo) {
+    function formatDate(today, daysAgo) {
         var date  = new Date(today.getTime() - (daysAgo * 24 /* hrs */ * 60 /* min */ * 60 /* sec */ * 1000 /* msec */));
         var month = date.getMonth() + 1; /* months start at Jan == 0 */
         var day   = date.getDate();
@@ -822,26 +829,37 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         month = month < 10 ? ('0' + month) : month;
         day   = day   < 10 ? ('0' + day)   : day;
 
-        var postfix = '?date=' + date.getFullYear() + '-' + month + '-' + day;
+        var postfix = date.getFullYear() + '-' + month + '-' + day;
         return postfix;
+    }
+
+    function getDatePostfix(day) {
+        return ('?date=' + day);
     }
 
     /**
     Wrapper function to show stats.
     */
     function getStats(today, daysAgo) {
-        setUpModal();
-
         var batterStatNames  = new Array('displayName','hab','r','hr','rbi','sb','avg');
         var pitcherStatNames = new Array('displayName','displayIP','w','l','s','k','era','whip');
         
         if (SCRIPT_MODE == 'team') {
+            setUpModal(null);
             getTeamStats(document, batterStatNames, BATTER, new TotalBatter());
             getTeamStats(document, pitcherStatNames, PITCHER, new TotalPitcher());
         }
         else { /* league mode */
-            var day = arguments.length ? getDatePostfix(today, daysAgo) : '';
-            getLeagueStats(day, batterStatNames, pitcherStatNames);
+            var day = ''; /* today */
+            if ((arguments.length == 0) || (daysAgo == 0)) {
+                setUpModal(null);
+                getLeagueStats(day, batterStatNames, pitcherStatNames);
+            }
+            else {
+                day = formatDate(today, daysAgo);
+                setUpModal(day);
+                getLeagueStats(getDatePostfix(day), batterStatNames, pitcherStatNames);
+            }
         }
 
         centerPopWin();
@@ -883,4 +901,4 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 //Suggestions Log
 //2007-05-09: Replace pop up menu will pull down menu or something nicer
 //2007-05-09: Show completion meter
-//2007-05-09: Show date as table header in league summary view
+//2007-05-09: Improve date label as table header in league summary view
