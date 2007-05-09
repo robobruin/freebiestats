@@ -337,6 +337,10 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     /**
      Show date range for league summary 0-6 days ago 
      */
+    function addDateToMenuItem(menuItem, n) {
+        menuItem.addEventListener('click', function(e) {getStats(new Date(), n);}, false);
+    }
+
     function showDateRange() {
         var id = 'robobruinStatBtn';
         var rangeId = id + 'daterange';
@@ -365,7 +369,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                 menuItem.innerHTML = n + ' days ago';
             }
 
-            menuItem.addEventListener('click', function(e) {hideDateRange(); getStats(new Date(), n);}, false);
+            addDateToMenuItem(menuItem, n);
 
             var br = document.createElement("br");
             dateRange.appendChild(menuItem);
@@ -819,7 +823,6 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         day   = day   < 10 ? ('0' + day)   : day;
 
         var postfix = '?date=' + date.getFullYear() + '-' + month + '-' + day;
-
         return postfix;
     }
 
