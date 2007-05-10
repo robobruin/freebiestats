@@ -215,6 +215,9 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 /**********************************************************************************************/
     /**
      Setup the modal window
+     @date   replace refresh button with date if date is not null
+
+     @return no return value
      */
     function setUpModal(date) {
         if (document.getElementById(MODAL_DIV_ID)) {
@@ -225,9 +228,14 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         document.body.appendChild(div);
         div.id = MODAL_DIV_ID;
 
-        GM_addStyle('#' + MODAL_DIV_ID + " {text-align:center;position:absolute;left: 0px;top: 0px;width:100%;height:100%;text-align:center;z-index: 200;background: url(\"data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%002%00%00%002%01%03%00%00%00%24%F1%1A%F2%00%00%00%06PLTE%9D%BF%C4%FF%FF%FFo%99%7C%D4%00%00%00%02tRNS%FF%00%E5%B70J%00%00%00%01bKGD%01%FF%02-%DE%00%00%00%09pHYs%00%00%00H%00%00%00H%00F%C9k%3E%00%00%00yIDATx%01%05%C1%01%01%00%00%08%02%20%1C%D9I%07u%A2%13A%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A%F6%01%90%ADD%F3%BDe%02%17%00%00%00%00IEND%AEB%60%82\");}");
+        /* remove the background image since the auto-scrolling is now
+         * disabled to get around continous auto scrolling in a short
+         * browser window; change table baground to a light tint instead
+         */
+        GM_addStyle('#' + MODAL_DIV_ID + " {text-align:center;position:absolute;left: 0px;top: 0px;width:100%;height:100%;text-align:center;z-index: 200;}");//background: url(\"data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%002%00%00%002%01%03%00%00%00%24%F1%1A%F2%00%00%00%06PLTE%9D%BF%C4%FF%FF%FFo%99%7C%D4%00%00%00%02tRNS%FF%00%E5%B70J%00%00%00%01bKGD%01%FF%02-%DE%00%00%00%09pHYs%00%00%00H%00%00%00H%00F%C9k%3E%00%00%00yIDATx%01%05%C1%01%01%00%00%08%02%20%1C%D9I%07u%A2%13A%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A6%03.%05%9B%01%97%82%CD%80K%C1f%C0%A5%603%E0R%B0%19p)%D8%0C%B8%14l%06%5C%0A%F6%01%90%ADD%F3%BDe%02%17%00%00%00%00IEND%AEB%60%82\");}");
 
-        GM_addStyle('#' + MODAL_DIV_ID + ' div {width:500px;margin:100px auto;background-color:#fff;border:1px solid #000;padding:15px;text-align:center;z-index:201;}');
+        //GM_addStyle('#' + MODAL_DIV_ID + ' div {width:500px;margin:100px auto;background-color:#fff;border:1px solid #000;padding:15px;text-align:center;z-index:201;}');
+        GM_addStyle('#' + MODAL_DIV_ID + ' div {width:500px;margin:100px auto;background-color:#F1F2ED;border:1px solid #000;padding:20px;text-align:center;z-index:201;}');
 
         GM_addStyle('.roboTable {width:100%;margin-bottom:20px;padding:3px;border-collapse:collapse;border: 1px solid #000;} tr.odd {background-color:white;font-weight:bold;} tr.even {background-color:beige;font-weight:bold;} thead tr {background-color:#ABAB9E;border-bottom:1px solid #000;} td {text-align:center;} tr.bench {background-color:#f1f2ed;font-weight:normal;} tr.total {background-color:yellow;font-weight:bold}');
 
@@ -254,6 +262,10 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         refresh.id = "roboRefresh";
         refresh.href = "#";
 
+        /* there is no need to display refresh button when in league
+         * wide stats mode so instead display the date for which the
+         * stats are reported 
+         */
         if (date) {
             refresh.innerHTML = date;
         }
@@ -342,18 +354,21 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     }
 
     /**
-     Show date range for league summary 0-6 days ago 
+     Attach getStats function to date range menu items
      */
     function addDateToMenuItem(menuItem, n) {
         menuItem.addEventListener('click', function(e) {hideDateRange(); getStats(new Date(), n);}, false);
     }
-
+ 
+    /**
+     Show date range for league summary 0-6 days ago
+     */
     function showDateRange() {
         var id = 'robobruinStatBtn';
         var rangeId = id + 'daterange';
 
         if (document.getElementById(rangeId)) {
-            hideDateRange();
+            hideDateRange(); // doesn't work, why?
         }
 
         /* replace button with pull down menu to show date range */
@@ -385,6 +400,9 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         document.body.appendChild(dateRange);
     }
 
+    /**
+     Hide date range for league summary
+     */
     function hideDateRange() {
         var id = 'robobruinStatBtn';
         var rangeId = id + 'daterange';
@@ -418,6 +436,9 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                 a.addEventListener('click', function(e) {getStats(); return false;},false);
             }
             else {
+                /* in league mode, show a date range that allows user
+                 * to pick the date they want to see the stats for 
+                 */
                 a.addEventListener('click', function(e) {showDateRange(); return false;},false);
             }
         } 
@@ -431,7 +452,10 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                 button.addEventListener('click', function(e) {getStats();}, false);
             }
             else {
-                a.addEventListener('click', function(e) {showDateRange(); return false;},false);
+                /* in league mode, show a date range that allows user
+                 * to pick the date they want to see the stats for 
+                 */
+                button.addEventListener('click', function(e) {showDateRange(); return false;},false);
             }
             GM_addStyle('#' + id + '{position:fixed;top:80px;right:80px;z-index:200;background-color:#0781C8;color:#fff;}');
         }
@@ -449,9 +473,9 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 
 /**********************************************************************************************/
     /**
-    TODO: issue 1
-    Set up the team stat table headers
-    */
+     TODO: issue 1
+     Set up the team stat table headers
+     */
     function setUpTable(tableId, pitcherOrBatter) {
         var div = document.getElementById(MODAL_DIV_ID).childNodes[0];
         var table = document.createElement("table");
@@ -667,10 +691,14 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         var statBody = document.getElementById(tableId);
         var rows = statBody.getElementsByTagName("TR");
 
+        /* for regular players, color the rows in alternating colors */
         if (player.position() != 'TOTAL') {
             tr.className = player.isOnBench() ? 'bench' : (player.order() % 2 == 0) ? 'even' : 'odd';
             statBody.replaceChild(tr, rows[player.order()]);
         } 
+        /* for total stats players, either highlight the row in yellow
+         * or use alternating colors if in league mode
+         */
         else {
             if (SCRIPT_MODE == 'team') {
                 tr.className = 'total';
@@ -697,7 +725,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
      @nodes            the player nodes
      @pitcherOrBatter  PITCHER or BATTER
      @statNames        stats categories
-     @totalPlayer       total stats for pitchers and batters
+     @totalPlayer      total stats for pitchers and batters
 
      @return no return value
      */
@@ -755,6 +783,8 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     }
 
     /**
+     Parse document to retrieve team players and their 
+     stats then start processing the team data       
      */
     function getTeamStats(statsDocument, statNames, pitcherOrBatter, totalPlayer) {
         var nodes;
@@ -770,6 +800,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 
 
     /**
+     Fetch document for team, and start processing team data
      */
     function updateTeamStats(teamURL, statNames, pitcherOrBatter, totalPlayer) {
         GM_xmlhttpRequest({
@@ -780,6 +811,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                 s = s.replace(/\n/g, ' ');
                 s = s.replace(/^.*<style.*<\/style>/gi, ' ');
                 s = s.replace(/^.*<body[^>]*>(.*)<\/body>.*$/gi, "$1");
+                // parsing isn't working if response text is not appended to document
                 var scope = appendToDocument(s);
                 
                 getTeamStats(scope, statNames, pitcherOrBatter, totalPlayer);
@@ -788,6 +820,9 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     }
 
     /**
+     Parse league standings and retrieve team name. Then for each
+     team create a total batter and pitcher and update the stats
+     for the team
      */
     function getLeagueStats(date, batterStatNames, pitcherStatNames) {
         var nodes = xpath(document, "//table[@id='standingstable']/tbody/tr/td[@class='team']");
@@ -820,7 +855,10 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
             updateTeamStats(teamURL, pitcherStatNames, PITCHER, totalTeamPitcher);
         }
     }
- 
+    
+    /** 
+     Format date to match yahoo format
+     */
     function formatDate(today, daysAgo) {
         var date  = new Date(today.getTime() - (daysAgo * 24 /* hrs */ * 60 /* min */ * 60 /* sec */ * 1000 /* msec */));
         var month = date.getMonth() + 1; /* months start at Jan == 0 */
@@ -833,13 +871,9 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         return postfix;
     }
 
-    function getDatePostfix(day) {
-        return ('?date=' + day);
-    }
-
     /**
-    Wrapper function to show stats.
-    */
+     Wrapper function to show stats.
+     */
     function getStats(today, daysAgo) {
         var batterStatNames  = new Array('displayName','hab','r','hr','rbi','sb','avg');
         var pitcherStatNames = new Array('displayName','displayIP','w','l','s','k','era','whip');
@@ -856,15 +890,21 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                 getLeagueStats(day, batterStatNames, pitcherStatNames);
             }
             else {
+                /* in league mode, replace the refresh button with
+                 * date corresponding to user selection
+                 */
                 day = formatDate(today, daysAgo);
                 setUpModal(day);
-                getLeagueStats(getDatePostfix(day), batterStatNames, pitcherStatNames);
+                getLeagueStats(('?date=' + day), batterStatNames, pitcherStatNames);
             }
         }
 
         centerPopWin();
         addEvent(window, "resize", centerPopWin);
-        addEvent(window, "scroll", centerPopWin);
+        /* disabled auto scrolling to get around issue in a short
+         * browser window which will always clip button of stats table
+         */
+        // addEvent(window, "scroll", centerPopWin);
     }
 /**********************************************************************************************/
 
@@ -891,12 +931,12 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 //2007-05-06: Added hooks for league wide total stats view (RMR)
 //2007-05-09: League wide total stats functional (RMR)
 //2007-05-09: Show pop up menu to select date (today-6 days ago) for which to summarize league stats (RMR)
+//2007-05-09: In league wide view, replace refresh button with date unless viewing stats for current day (RMR)
 
 //Bug Log
-//2007-05-04: Clean up and delete old handles to rows (esp. totals) while removing overlay (FIXME)
-//2007-05-04: Handle double header games
-//2007-05-09: Need to speed up league wide stats processing (delete attached documents?)
-//2007-05-09: Refresh not supported properly for league wide view (if refresh clicked while viewing previous day stats, it reverts to today mode)
+//2007-05-04: Need to terminate pending events to properly clean up and delete old handles to rows (FIXME)
+//2007-05-04: Handle double header games (FIXME)
+//2007-05-09: Need to speed up league wide stats processing (delete attached documents?) (FIXME)
 
 //Suggestions Log
 //2007-05-09: Replace pop up menu will pull down menu or something nicer
