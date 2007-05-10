@@ -44,6 +44,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         this._name     = '';
         this._displayName = '';
         this._position = '';
+        this._gameinfo = '';
         this._order    = 0;
 
         this._h  = 0;
@@ -55,6 +56,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     Player.prototype.name        = function (arg) {if (arguments.length) this._name        = arg; else return this._name;}
     Player.prototype.displayName = function (arg) {if (arguments.length) this._displayName = arg; else return this._displayName;}
     Player.prototype.position    = function (arg) {if (arguments.length) this._position    = arg; else return this._position;}
+    Player.prototype.gameinfo    = function (arg) {if (arguments.length) this._gameinfo    = arg; else return this._gameinfo;}
     Player.prototype.order       = function (arg) {if (arguments.length) this._order = parseInt(arg); else return this._order;}
 
     Player.prototype.isOnBench   = function ()    {return (this._position == 'BN' || this._position == 'DL');}
@@ -486,12 +488,12 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 
         if (pitcherOrBatter == BATTER) {
             table.innerHTML +=
-                '<thead><tr><td width="23%" height="18" align="left">&nbsp;Name</td><td width="8%">H/AB</td><td width="8%">R</td><td width="8%">HR</td><td width="8%">RBI</td><td width="8%">SB</td><td width="8%">AVG</td></tr></thead>' +
+                '<thead><tr><td width="23%" height="18" align="left">&nbsp;Name</td><td width="12%">Status</td><td width="8%">H/AB</td><td width="8%">R</td><td width="8%">HR</td><td width="8%">RBI</td><td width="8%">SB</td><td width="8%">AVG</td></tr></thead>' +
                 '<tbody id="'+ tableId+'">' +
                 '</tbody>';
         } else {
             table.innerHTML +=
-                '<thead><tr><td width="23%" height="18" align="left">&nbsp;Name</td><td width="7%">IP</td><td width="7%">W</td><td width="7%">L</td><td width="7%">S</td><td width="7%">K</td><td width="7%">ERA</td><td width="7%">WHIP</td></tr></thead>' +
+                '<thead><tr><td width="23%" height="18" align="left">&nbsp;Name</td><td width="12%">Status</td><td width="7%">IP</td><td width="7%">W</td><td width="7%">L</td><td width="7%">S</td><td width="7%">K</td><td width="7%">ERA</td><td width="7%">WHIP</td></tr></thead>' +
                 '<tbody id="'+ tableId+'">' +
                 '</tbody>';
         }
@@ -746,6 +748,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                 if (column.className && column.className == 'gametime') {
                     if (column.childNodes.length && column.childNodes[0].nodeName == 'A') {
                         var boxscoreLink = column.childNodes[0].getAttribute("href");
+                        var gameinfo = column.childNodes[0].innerHTML;
                         boxscoreLink = new String(boxscoreLink).replace('recap', 'boxscore');
                         if (boxscoreLink.indexOf("preview")> -1) {break;}
                         column.childNodes[0].setAttribute("href", boxscoreLink);
@@ -771,6 +774,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                         var player = (pitcherOrBatter == BATTER) ? new Batter() : new Pitcher();
                         player.playerId(playerId);
                         player.position(position);
+                        player.gameinfo(gameinfo);
                         player.order(iBoxScore);
 
                         iBoxScore++;
@@ -875,8 +879,8 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
      Wrapper function to show stats.
      */
     function getStats(today, daysAgo) {
-        var batterStatNames  = new Array('displayName','hab','r','hr','rbi','sb','avg');
-        var pitcherStatNames = new Array('displayName','displayIP','w','l','s','k','era','whip');
+        var batterStatNames  = new Array('displayName','gameinfo','hab','r','hr','rbi','sb','avg');
+        var pitcherStatNames = new Array('displayName','gameinfo','displayIP','w','l','s','k','era','whip');
         
         if (SCRIPT_MODE == 'team') {
             setUpModal(null);
@@ -932,6 +936,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 //2007-05-09: League wide total stats functional (RMR)
 //2007-05-09: Show pop up menu to select date (today-6 days ago) for which to summarize league stats (RMR)
 //2007-05-09: In league wide view, replace refresh button with date unless viewing stats for current day (RMR)
+//2007-05-10: Show game status in stats table (RMR)
 
 //Bug Log
 //2007-05-04: Need to terminate pending events to properly clean up and delete old handles to rows (FIXME)
