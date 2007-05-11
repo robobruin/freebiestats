@@ -4,38 +4,67 @@
 // @description     Live baseball fantasy scoring
 // @include         http://baseball.fantasysports.yahoo.com/*
 //
-/*
-This script is released under Mozilla Public License 1.1, http://www.mozilla.org/MPL/
-The purpose is to provide live scoring updates for your default yahoo fantasy baseball team.
+// --------------------------------------------------------------------
+// This is a Greasemonkey user script.
+// It provides live scoring updates for Yahoo Fantasy Baseball leagues.
+//
+// --------------------------------------------------------------------
+// This script is released under Mozilla Public License 1.1
+// http://www.mozilla.org/MPL/
+//
+// To install, you need Greasemonkey: 
+// http://greasemonkey.mozdev.org/
+//
+// Then restart Firefox and revisit this script:
+// http://userscripts.org/scripts/show/5143
+//
+// Under Tools, there will be a new menu item to "Install User Script".
+// Accept the default configuration and install.
+//
+// To uninstall, go to Tools/Manage User Scripts,
+// select "Yahoo Fantasy Baseball", and click Uninstall.
+//
+// --------------------------------------------------------------------
+// For code enhancements, feature requests, or to report bugs, visit:
+// http://code.google.com/p/freebiestats/issues/list
+//
+// --------------------------------------------------------------------
+// Credits for modal dialog inspiration:
+// http://gabrito.com/files/subModal/
+// http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-javascript/
+//
+// --------------------------------------------------------------------
 
-For code enhancements, feature requests, or to report bugs, visit:
-http://code.google.com/p/freebiestats/issues/list
 
-Why does baseball rock? http://robobruin.blogspot.com/2007/02/fresh-start.html
+const VERSION = 2.2-2;
 
-credits for modal dialog inspiration:
-http://gabrito.com/files/subModal/
-http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-javascript/
-*/
 
 (function () {
+    const YAHOO_MLB_BASEURL = 'http://baseball.fantasysports.yahoo.com';
+
+    const BUTTON_LABEL   = 'Show Freebie Stats!';
+
+    const HIDDEN_DIV_ID  = 'robobruinDiv';
+    const MODAL_DIV_ID   = 'robobruinModal';
+    const STAT_BODY_ID   = 'robobruinTableBody';
+    const STAT_BUTTON_ID = 'robobruinStatBtn';
+    
+    const BATTER  = 'batter';
+    const PITCHER = 'pitcher';
+    const TOTALER = 'total';
+    const TEAM    = 'team';
+    const LEAGUE  = 'league';
+
     /* run in team mode, league mode, or don't runt at all */
     var SCRIPT_MODE = null;
 
     if (location.href.match(/^http\:\/\/baseball\.fantasysports\.yahoo\.com\/b\d\/\d+\/(team\?mid=)?\d+.*/i)) {
-        SCRIPT_MODE = 'team';
+        SCRIPT_MODE = TEAM;
     }
     else if (location.href.match(/^http\:\/\/baseball\.fantasysports\.yahoo\.com\/b\d\/\d+./i)) {
-        SCRIPT_MODE = 'league';
+        SCRIPT_MODE = LEAGUE;
     }
     else return;
-
-    //Globals
-    var HIDDEN_DIV_ID = 'robobruinDiv';
-    var MODAL_DIV_ID = 'robobruinModal';
-    var STAT_BODY_ID = 'robobruinTableBody';
-    var BATTER = 'batter';
-    var PITCHER = 'pitcher';
 
 /**********************************************************************************************/
     /* all players */
@@ -160,7 +189,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
     }
 
     function TotalBatter(label, order)  {
-        this._position = 'TOTAL'; 
+        this._position = TOTALER; 
 
         if (arguments.length) {
             this._displayName = label;
@@ -172,7 +201,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         }
     }
     function TotalPitcher(label, order)  {
-        this._position = 'TOTAL'; 
+        this._position = TOTALER; 
 
         if (arguments.length) {
             this._displayName = label;
@@ -366,7 +395,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
      Show date range for league summary 0-6 days ago
      */
     function showDateRange() {
-        var id = 'robobruinStatBtn';
+        var id = STAT_BUTTON_ID;
         var rangeId = id + 'daterange';
 
         if (document.getElementById(rangeId)) {
@@ -406,7 +435,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
      Hide date range for league summary
      */
     function hideDateRange() {
-        var id = 'robobruinStatBtn';
+        var id = STAT_BUTTON_ID;
         var rangeId = id + 'daterange';
 
         var dateRange = document.getElementById(rangeId);
@@ -419,13 +448,13 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
      Add the blue show stats button
      */
     function addShowStatsButton() {
-        var id = 'robobruinStatBtn';
+        var id = STAT_BUTTON_ID;
 
         if (document.getElementById(id)) {
             return;
         }
         var nodes = xpath(document, "//a[contains(@href,'stattracker')]");
-        var promoText = 'Show Freebie Stats!' + (SCRIPT_MODE == 'league' ? ' (e)' : '');
+        var promoText = BUTTON_LABEL + (SCRIPT_MODE == LEAGUE ? ' (e)' : '');
         
         if (nodes.snapshotItem(0)) {
             var a = nodes.snapshotItem(0);
@@ -434,7 +463,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
             a.innerHTML = promoText;
             a.id = id;
 
-            if (SCRIPT_MODE == 'team') {
+            if (SCRIPT_MODE == TEAM) {
                 a.addEventListener('click', function(e) {getStats(); return false;},false);
             }
             else {
@@ -450,7 +479,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
             button.id = id;
             button.innerHTML = promoText;
             
-            if (SCRIPT_MODE == 'team') {
+            if (SCRIPT_MODE == TEAM) {
                 button.addEventListener('click', function(e) {getStats();}, false);
             }
             else {
@@ -663,7 +692,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                 totalPlayer.add(player);
             }
 
-            if (SCRIPT_MODE == 'team') {
+            if (SCRIPT_MODE == TEAM) {
                 updateStatsRow(player, statNames);
             }
             updateStatsRow(totalPlayer, statNames);
@@ -694,7 +723,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         var rows = statBody.getElementsByTagName("TR");
 
         /* for regular players, color the rows in alternating colors */
-        if (player.position() != 'TOTAL') {
+        if (player.position() != TOTALER) {
             tr.className = player.isOnBench() ? 'bench' : (player.order() % 2 == 0) ? 'even' : 'odd';
             statBody.replaceChild(tr, rows[player.order()]);
         } 
@@ -702,7 +731,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
          * or use alternating colors if in league mode
          */
         else {
-            if (SCRIPT_MODE == 'team') {
+            if (SCRIPT_MODE == TEAM) {
                 tr.className = 'total';
                 statBody.replaceChild(tr, rows[rows.length-1]);
             }
@@ -753,7 +782,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
                         if (boxscoreLink.indexOf("preview")> -1) {break;}
                         column.childNodes[0].setAttribute("href", boxscoreLink);
 
-                        if (SCRIPT_MODE == 'team') {
+                        if (SCRIPT_MODE == TEAM) {
                             var statBody;
                             var tableId = STAT_BODY_ID + pitcherOrBatter;
 
@@ -839,7 +868,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 
         for (var i = 0; i < nodes.snapshotLength; i++) {
             /* team name and url */
-            var teamURL  = 'http://baseball.fantasysports.yahoo.com' + nodes.snapshotItem(i).childNodes[0].getAttribute("href") + date;
+            var teamURL  = YAHOO_MLB_BASEURL + nodes.snapshotItem(i).childNodes[0].getAttribute("href") + date;
             var teamName = '<a href=\"' + teamURL + '\">' + nodes.snapshotItem(i).childNodes[0].innerHTML + '</a>';
             
             tableId = STAT_BODY_ID + BATTER;
@@ -882,7 +911,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
         var batterStatNames  = new Array('displayName','gameinfo','hab','r','hr','rbi','sb','avg');
         var pitcherStatNames = new Array('displayName','gameinfo','displayIP','w','l','s','k','era','whip');
         
-        if (SCRIPT_MODE == 'team') {
+        if (SCRIPT_MODE == TEAM) {
             setUpModal(null);
             getTeamStats(document, batterStatNames, BATTER, new TotalBatter());
             getTeamStats(document, pitcherStatNames, PITCHER, new TotalPitcher());
@@ -937,6 +966,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 //2007-05-09: Show pop up menu to select date (today-6 days ago) for which to summarize league stats (RMR)
 //2007-05-09: In league wide view, replace refresh button with date unless viewing stats for current day (RMR)
 //2007-05-10: Show game status in stats table (RMR)
+//2007-05-11: Some refactoring (RMR)
 
 //Bug Log
 //2007-05-04: Need to terminate pending events to properly clean up and delete old handles to rows (FIXME)
@@ -947,3 +977,4 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 //2007-05-09: Replace pop up menu will pull down menu or something nicer
 //2007-05-09: Show completion meter
 //2007-05-09: Improve date label as table header in league summary view
+//2007-05-11: Add script auto-update feature
