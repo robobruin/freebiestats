@@ -36,7 +36,8 @@
 // --------------------------------------------------------------------
 
 
-const VERSION = 2.2-2;
+const VERSION    = 2.2-2;
+const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
 
 
 (function () {
