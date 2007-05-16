@@ -62,9 +62,12 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
     if (location.href.match(/^http\:\/\/baseball\.fantasysports\.yahoo\.com\/b\d\/\d+\/(team\?mid=)?\d+.*/i)) {
         SCRIPT_MODE = TEAM;
     }
+    /* disable league mode until performance issues are resolved */
+    /*
     else if (location.href.match(/^http\:\/\/baseball\.fantasysports\.yahoo\.com\/b\d\/\d+./i)) {
         SCRIPT_MODE = LEAGUE;
     }
+    */
     else return;
 
 /**********************************************************************************************/
@@ -133,9 +136,19 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
         return this._h + '/' + this._ab;
     }
 
+    Batter.prototype.add = function (player) {
+        this._ab  += player.ab();
+        this._h   += player.h();
+        this._bb  += player.bb();
+        this._r   += player.r();
+        this._hr  += player.hr();
+        this._sb  += player.sb();
+        this._rbi += player.rbi();
+    }
+
     /* pitchers */
     function Pitcher() {
-        this._displayIP = '-';
+        //this._displayIP = '-';
         /* keep track of full IP and partial IP 
          * from which the IP is calculated
          */
@@ -152,13 +165,14 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
     }
 
     Pitcher.prototype = new Player();
-    Pitcher.prototype.displayIP = function (arg) {
+    Pitcher.prototype.IP = function (arg) {
         if (arguments.length) {
-            this._displayIP = arg; 
             this._fullIP += parseInt(arg);
             this._partIP += (arg * 10) % 10;
         }
-        else return this._displayIP;
+        else {
+            return ((this._fullIP + parseInt(this._partIP / 3)) + '.' + (this._partIP % 3));
+        }
     }
     Pitcher.prototype.er = function (arg) {if (arguments.length) this._er = parseInt(arg); else return this._er;}
     Pitcher.prototype.w  = function (arg) {if (arguments.length) this._w  = parseInt(arg); else return this._w;}
@@ -189,6 +203,18 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
         else return '-';
     }
 
+    Pitcher.prototype.add = function (player) {
+        this._fullIP += player._fullIP;
+        this._partIP += player._partIP;
+        this._h  += player.h();
+        this._bb += player.bb();
+        this._er += player.er();
+        this._w  += player.w();
+        this._l  += player.l();
+        this._s  += player.s();
+        this._k  += player.k();
+    }
+
     function TotalBatter(label, order)  {
         this._position = TOTALER; 
 
@@ -216,32 +242,6 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
 
     TotalBatter.prototype = new Batter();
     TotalPitcher.prototype = new Pitcher();
-
-    TotalBatter.prototype.add = function (player) {
-        this._ab  += player.ab();
-        this._h   += player.h();
-        this._bb  += player.bb();
-        this._r   += player.r();
-        this._hr  += player.hr();
-        this._sb  += player.sb();
-        this._rbi += player.rbi();
-    }
-
-    TotalPitcher.prototype.add = function (player) {
-        this._fullIP += player._fullIP;
-        this._partIP += player._partIP;
-        this._h  += player.h();
-        this._bb += player.bb();
-        this._er += player.er();
-        this._w  += player.w();
-        this._l  += player.l();
-        this._s  += player.s();
-        this._k  += player.k();
-    }
-
-    TotalPitcher.prototype.displayIP = function () {
-        return ((this._fullIP + parseInt(this._partIP / 3)) + '.' + (this._partIP % 3));
-    }
 /**********************************************************************************************/
 
 /**********************************************************************************************/
@@ -663,34 +663,51 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
             columns[0].childNodes[1].setAttribute('href', url);
             columns[0].childNodes[1].setAttribute('target','_blank');
 
+            /* use a temporary player for game stats and then accumulate in 
+             * actual player to deal with double headers
+             */
+            var playerGameStats = player.isBatter() ? new Batter() : new Pitcher();
+
             if (player.isBatter()) {
+                /* in case of multiple games (double headers) use lates name/game info 
+                 * (not so important for hitters, but for pitchers will only display 
+                 *  W/L/S/BS for second game if pitcher pitched twice on the same day)
+                 */
                 var hitter = columns[0].childNodes[1].text.replace(/(.).+ (.+)/,"$1 $2");
                 player.name(hitter);
                 player.displayName(columns[0].innerHTML);
 
-                player.ab(columns[1].innerHTML);
-                player.r(columns[2].innerHTML);
-                player.h(columns[3].innerHTML);
-                player.rbi(columns[4].innerHTML);
-                player.bb(columns[5].innerHTML);
-                player.hr(getHRorSB('HR', hitter, document));
-                player.sb(getHRorSB('SB', hitter, document));
+                playerGameStats.ab(columns[1].innerHTML);
+                playerGameStats.r(columns[2].innerHTML);
+                playerGameStats.h(columns[3].innerHTML);
+                playerGameStats.rbi(columns[4].innerHTML);
+                playerGameStats.bb(columns[5].innerHTML);
+                playerGameStats.hr(getHRorSB('HR', hitter, document));
+                playerGameStats.sb(getHRorSB('SB', hitter, document));
             } else {
+                /* in case of multiple games (double headers) use lates name/game info 
+                 * (not so important for hitters, but for pitchers will only display 
+                 *  W/L/S/BS for second game if pitcher pitched twice on the same day)
+                 */
                 var pitcherName = columns[0].innerHTML;
                 player.displayName(pitcherName);
-                player.displayIP(columns[1].innerHTML);
-                player.h(columns[2].innerHTML);
-                player.er(columns[4].innerHTML);
-                player.bb(columns[5].innerHTML);
-                player.k(columns[6].innerHTML);
 
-                player.w((pitcherName.indexOf("(W") > -1) ? 1 : 0);
-                player.l((pitcherName.indexOf("(L") > -1) ? 1 : 0);
-                player.s((pitcherName.indexOf("(S") > -1) ? 1 : 0);
+                playerGameStats.IP(columns[1].innerHTML);
+                playerGameStats.h(columns[2].innerHTML);
+                playerGameStats.er(columns[4].innerHTML);
+                playerGameStats.bb(columns[5].innerHTML);
+                playerGameStats.k(columns[6].innerHTML);
+
+                playerGameStats.w((pitcherName.indexOf("(W") > -1) ? 1 : 0);
+                playerGameStats.l((pitcherName.indexOf("(L") > -1) ? 1 : 0);
+                playerGameStats.s((pitcherName.indexOf("(S") > -1) ? 1 : 0);
             }
 
+            /* update player stats for multiple games */
+            player.add(playerGameStats);
+
             if (!player.isOnBench()) {
-                totalPlayer.add(player);
+                totalPlayer.add(playerGameStats);
             }
 
             if (SCRIPT_MODE == TEAM) {
@@ -776,39 +793,55 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
             for(var j=1; j < row.childNodes.length; j++) {
                 var column = row.childNodes[j];
                 if (column.className && column.className == 'gametime') {
-                    if (column.childNodes.length && column.childNodes[0].nodeName == 'A') {
-                        var boxscoreLink = column.childNodes[0].getAttribute("href");
-                        var gameinfo = column.childNodes[0].innerHTML;
-                        boxscoreLink = new String(boxscoreLink).replace('recap', 'boxscore');
-                        if (boxscoreLink.indexOf("preview")> -1) {break;}
-                        column.childNodes[0].setAttribute("href", boxscoreLink);
+                    /* handle more than one game on the same day (e.g., double headers) */
+                    var player = null;
 
-                        if (SCRIPT_MODE == TEAM) {
-                            var statBody;
-                            var tableId = STAT_BODY_ID + pitcherOrBatter;
-
-                            if (iBoxScore == 0) {
-                                statBody = setUpTable(tableId, pitcherOrBatter);
-                                var totalRow = document.createElement("tr");
-                                totalRow.className = 'total';
-                                statBody.appendChild(totalRow);
+                    for (game = 0; game < column.childNodes.length; game++) {
+                        if (column.childNodes[game].nodeName == 'A')  {
+                            var boxscoreLink = column.childNodes[game].getAttribute("href");
+                            var gameinfo = column.childNodes[game].innerHTML;
+                            boxscoreLink = new String(boxscoreLink).replace('recap', 'boxscore');
+                            if (boxscoreLink.indexOf("preview")> -1) {break;}
+                            column.childNodes[game].setAttribute("href", boxscoreLink);
+                            
+                            /* allocate row for player */
+                            if ((game == 0) && SCRIPT_MODE == TEAM) {
+                                var statBody;
+                                var tableId = STAT_BODY_ID + pitcherOrBatter;
+                                
+                                /* and also allocate a row for team totals if one does not
+                                 * already exist and we have some boxscore links to process
+                                 */
+                                if (iBoxScore == 0) {
+                                    statBody = setUpTable(tableId, pitcherOrBatter);
+                                    var totalRow = document.createElement("tr");
+                                    totalRow.className = 'total';
+                                    statBody.appendChild(totalRow);
+                                }
+                                
+                                statBody = document.getElementById(tableId);
+                                var rows = statBody.getElementsByTagName("TR");
+                                var lastRow = rows[rows.length-1];
+                                var statRow = document.createElement("tr");
+                                statBody.insertBefore(statRow, lastRow);
+                            }
+                            
+                            /* create player object once */
+                            if (game == 0) {
+                                player = (pitcherOrBatter == BATTER) ? new Batter() : new Pitcher();
+                                player.playerId(playerId);
+                                player.position(position);
+                                player.order(iBoxScore);
+                            
+                                iBoxScore++;
                             }
 
-                            statBody = document.getElementById(tableId);
-                            var rows = statBody.getElementsByTagName("TR");
-                            var lastRow = rows[rows.length-1];
-                            var statRow = document.createElement("tr");
-                            statBody.insertBefore(statRow, lastRow);
+                            /* in case of multiple games, link to most current */
+                            player.gameinfo(gameinfo);
+
+                            /* process player stats for each boxscore */
+                            getDocument(boxscoreLink, player, statNames, totalPlayer);
                         }
-
-                        var player = (pitcherOrBatter == BATTER) ? new Batter() : new Pitcher();
-                        player.playerId(playerId);
-                        player.position(position);
-                        player.gameinfo(gameinfo);
-                        player.order(iBoxScore);
-
-                        iBoxScore++;
-                        getDocument(boxscoreLink, player, statNames, totalPlayer);
                     }
                     break;
                 }
@@ -910,7 +943,7 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
      */
     function getStats(today, daysAgo) {
         var batterStatNames  = new Array('displayName','gameinfo','hab','r','hr','rbi','sb','avg');
-        var pitcherStatNames = new Array('displayName','gameinfo','displayIP','w','l','s','k','era','whip');
+        var pitcherStatNames = new Array('displayName','gameinfo','IP','w','l','s','k','era','whip');
         
         if (SCRIPT_MODE == TEAM) {
             setUpModal(null);
@@ -968,10 +1001,10 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
 //2007-05-09: In league wide view, replace refresh button with date unless viewing stats for current day (RMR)
 //2007-05-10: Show game status in stats table (RMR)
 //2007-05-11: Some refactoring (RMR)
+//2007-05-16: Handle double header games (RMR)
 
 //Bug Log
 //2007-05-04: Need to terminate pending events to properly clean up and delete old handles to rows (FIXME)
-//2007-05-04: Handle double header games (FIXME)
 //2007-05-09: Need to speed up league wide stats processing (delete attached documents?) (FIXME)
 
 //Suggestions Log
