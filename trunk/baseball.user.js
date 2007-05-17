@@ -62,12 +62,9 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
     if (location.href.match(/^http\:\/\/baseball\.fantasysports\.yahoo\.com\/b\d\/\d+\/(team\?mid=)?\d+.*/i)) {
         SCRIPT_MODE = TEAM;
     }
-    /* disable league mode until performance issues are resolved */
-    /*
     else if (location.href.match(/^http\:\/\/baseball\.fantasysports\.yahoo\.com\/b\d\/\d+./i)) {
         SCRIPT_MODE = LEAGUE;
     }
-    */
     else return;
 
 /**********************************************************************************************/
@@ -101,19 +98,27 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
     function Batter() {
         this._ab  = 0;
         this._r   = 0;
+        this._h2b = 0; // doubles
+        this._h3b = 0; // triples
         this._hr  = 0;
         this._rbi = 0;
         this._sb  = 0;
+        this._sf  = 0;
+        this._hbp = 0; // hit by pitch
         this._isBatter = true;
     }
 
     /* batters */
     Batter.prototype = new Player();
-    Batter.prototype.ab  = function (arg) {if (arguments.length) this._ab = parseInt(arg); else return this._ab;}
-    Batter.prototype.r   = function (arg) {if (arguments.length) this._r  = parseInt(arg); else return this._r;}
-    Batter.prototype.hr  = function (arg) {if (arguments.length) this._hr = parseInt(arg); else return this._hr;}
-    Batter.prototype.rbi = function (arg) {if (arguments.length) this._rbi= parseInt(arg); else return this._rbi;}
-    Batter.prototype.sb  = function (arg) {if (arguments.length) this._sb = parseInt(arg); else return this._sb}
+    Batter.prototype.ab  = function (arg) {if (arguments.length) this._ab  = parseInt(arg); else return this._ab;}
+    Batter.prototype.r   = function (arg) {if (arguments.length) this._r   = parseInt(arg); else return this._r;}
+    Batter.prototype.h2b = function (arg) {if (arguments.length) this._h2b = parseInt(arg); else return this._h2b;}
+    Batter.prototype.h3b = function (arg) {if (arguments.length) this._h3b = parseInt(arg); else return this._h3b;}
+    Batter.prototype.hr  = function (arg) {if (arguments.length) this._hr  = parseInt(arg); else return this._hr;}
+    Batter.prototype.rbi = function (arg) {if (arguments.length) this._rbi = parseInt(arg); else return this._rbi;}
+    Batter.prototype.sb  = function (arg) {if (arguments.length) this._sb  = parseInt(arg); else return this._sb}
+    Batter.prototype.sf  = function (arg) {if (arguments.length) this._sf  = parseInt(arg); else return this._sf}
+    Batter.prototype.hbp = function (arg) {if (arguments.length) this._hbp = parseInt(arg); else return this._hbp;}
 
     Batter.prototype.avg = function () {
         if (this._ab > 0) {
@@ -123,15 +128,45 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
         } 
         else return '-';
     }
-    /* on base percentage ignores hit-by-pitch and sac flys */
+
     Batter.prototype.obp = function () {
-        if ((this._ab + this._bb) > 0) {
-            var obp = ((this._h + this._bb) / (this._ab + this._bb)).toFixed(3);
+        if ((this._ab + this._bb + this._hbp + this._sf) > 0) {
+            var obp = ((this._h + this._bb + this._hbp) / (this._ab + this._bb + this._hbp + this._sf)).toFixed(3);
             obp = (new String(obp).charAt(0) != '1') ? (obp.substring(1, obp.length)) : obp;
             return obp;
         } 
         else return '-';
     }
+
+    /* slugging percentage */
+    Batter.prototype.slg = function () {
+        if (this._ab > 0) {
+            var h1b = this._h - this._hr - this._h2b - this._h3b;
+            var slg = ((h1b + (this._h2b * 2) + (this._h3b * 3) + (this._hr * 4)) / this._ab).toFixed(3);
+            slg = (new String(slg).charAt(0) == '0') ? (slg.substring(1, slg.length)) : slg;
+            return slg;
+        }
+        else return '-';
+    }
+
+    /* on base plus slugging percentage */
+    Batter.prototype.ops = function () {
+        var obp = this.obp();
+        var slg = this.slg();
+        
+        if (obp == '-') {
+            return slg;
+        }
+        else if (slg == '-') {
+            return obp;
+        }
+        else {
+            var ops = (parseFloat(obp) + parseFloat(slg)).toFixed(3);
+            ops = (new String(ops).charAt(0) == '0') ? (ops.substring(1, ops.length)) : ops;
+            return ops;
+        }
+    }
+    
     Batter.prototype.hab = function () {
         return this._h + '/' + this._ab;
     }
@@ -141,9 +176,13 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
         this._h   += player.h();
         this._bb  += player.bb();
         this._r   += player.r();
+        this._h2b += player.h2b();
+        this._h3b += player.h3b();
         this._hr  += player.hr();
-        this._sb  += player.sb();
         this._rbi += player.rbi();
+        this._sb  += player.sb();
+        this._sf  += player.sf();
+        this._hbp += player.hbp();
     }
 
     /* pitchers */
@@ -518,12 +557,12 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
 
         if (pitcherOrBatter == BATTER) {
             table.innerHTML +=
-                '<thead><tr><td width="23%" height="18" align="left">&nbsp;Name</td><td width="12%">Status</td><td width="8%">H/AB</td><td width="8%">R</td><td width="8%">HR</td><td width="8%">RBI</td><td width="8%">SB</td><td width="8%">AVG</td></tr></thead>' +
+                '<thead><tr><td width="23%" height="18" align="left">Name</td><td align="center" width="12%">Status</td><td align="right" width="8%">H/AB</td><td align="right" width="8%">R</td><td align="right" width="8%">HR</td><td align="right" width="8%">RBI</td><td align="right" width="8%">SB</td><td align="right" width="8%">AVG</td><td align="right" width="8%">OPS</td></tr></thead>' +
                 '<tbody id="'+ tableId+'">' +
                 '</tbody>';
         } else {
             table.innerHTML +=
-                '<thead><tr><td width="23%" height="18" align="left">&nbsp;Name</td><td width="12%">Status</td><td width="7%">IP</td><td width="7%">W</td><td width="7%">L</td><td width="7%">S</td><td width="7%">K</td><td width="7%">ERA</td><td width="7%">WHIP</td></tr></thead>' +
+                '<thead><tr><td width="23%" height="18" align="left">Name</td><td align="center" width="12%">Status</td><td align="right" width="8%">IP</td><td align="right" width="8%">W</td><td align="right" width="8%">L</td><td align="right" width="8%">S</td><td align="right" width="8%">K</td><td align="right" width="8%">ERA</td><td align="right" width="8%">WHIP</td></tr></thead>' +
                 '<tbody id="'+ tableId+'">' +
                 '</tbody>';
         }
@@ -614,15 +653,15 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
 
 /**********************************************************************************************/
     /**
-     HR and SB stats appear at the bottom of the boxscore table.
+     HR, SB, Extra Base Hits, Sac Flies, etc. appear at the bottom of the boxscore table.
      We need to do a string match on the player since the playerId does not appear.
-     @type        SB or HR
+     @type        2B, 3B, HR, SF, HBP, or SB
      @playerName  name of player
      @document    document to parse
 
-     @return number of HR or SB
+     @return number of 2B, 3B, HR, SF, HBP, or SB
      */
-    function getHRorSB(type, playerName, document) {
+    function getXBHorSB(type, playerName, document) {
         var nodes = xpath(document, "//td[@class='yspscores' and contains(.,'" + type + "') and contains(.,'" + playerName + "')]");
         var j = nodes.snapshotLength;
         var numStat = 0;
@@ -682,8 +721,12 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
                 playerGameStats.h(columns[3].innerHTML);
                 playerGameStats.rbi(columns[4].innerHTML);
                 playerGameStats.bb(columns[5].innerHTML);
-                playerGameStats.hr(getHRorSB('HR', hitter, document));
-                playerGameStats.sb(getHRorSB('SB', hitter, document));
+                playerGameStats.h2b(getXBHorSB('2B', hitter, document));
+                playerGameStats.h3b(getXBHorSB('3B', hitter, document));
+                playerGameStats.hr(getXBHorSB('HR', hitter, document));
+                playerGameStats.sb(getXBHorSB('SB', hitter, document));
+                playerGameStats.sf(getXBHorSB('SF', hitter, document));
+                playerGameStats.hbp(getXBHorSB('HBP', hitter, document));
             } else {
                 /* in case of multiple games (double headers) use lates name/game info 
                  * (not so important for hitters, but for pitchers will only display 
@@ -727,9 +770,19 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
     function updateStatsRow(player, statNames) {
         var tr = document.createElement("tr");
 
-        for (var i=0; i<statNames.length; i++) {
+        for (var i=0; i< statNames.length; i++) {
             var name = statNames[i];
             var td = document.createElement("td");
+
+            if (name == 'displayName') {
+                td.align = 'left';
+            }
+            else if (name == 'gameinfo') {
+                td.align = 'center';
+            }
+            else {
+                td.align = 'right';
+            }
 
             td.innerHTML = eval('player.' + name + '()');
             tr.appendChild(td);
@@ -836,10 +889,17 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
                                 iBoxScore++;
                             }
 
-                            /* in case of multiple games, link to most current */
+                            /* in case of multiple games, use atus of most recent game */
                             player.gameinfo(gameinfo);
 
                             /* process player stats for each boxscore */
+                            /* note that if player's team is playing a double header
+                             * and player isn't playing in second game, then player's
+                             * name will link to the most recent boxscore if the player
+                             * plays in the second game as well, otherwise the link
+                             * will remain pointing to the most recent game the player 
+                             * played in
+                             */
                             getDocument(boxscoreLink, player, statNames, totalPlayer);
                         }
                     }
@@ -942,7 +1002,7 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
      Wrapper function to show stats.
      */
     function getStats(today, daysAgo) {
-        var batterStatNames  = new Array('displayName','gameinfo','hab','r','hr','rbi','sb','avg');
+        var batterStatNames  = new Array('displayName','gameinfo','hab','r','hr','rbi','sb','avg','ops');
         var pitcherStatNames = new Array('displayName','gameinfo','IP','w','l','s','k','era','whip');
         
         if (SCRIPT_MODE == TEAM) {
@@ -1002,13 +1062,16 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
 //2007-05-10: Show game status in stats table (RMR)
 //2007-05-11: Some refactoring (RMR)
 //2007-05-16: Handle double header games (RMR)
+//2007-05-17: Calculate OBP, SLG, and OPS and display OPS by default (RMR)
 
 //Bug Log
 //2007-05-04: Need to terminate pending events to properly clean up and delete old handles to rows (FIXME)
 //2007-05-09: Need to speed up league wide stats processing (delete attached documents?) (FIXME)
+//2007-05-17: Text alignment attributes in table not taking effect (FIXME)
 
 //Suggestions Log
 //2007-05-09: Replace pop up menu will pull down menu or something nicer
 //2007-05-09: Show completion meter
 //2007-05-09: Improve date label as table header in league summary view
 //2007-05-11: Add script auto-update feature
+//2007-05-17: Add functions to retrieve category names for stats so that table is parameterized as well
