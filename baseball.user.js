@@ -36,7 +36,7 @@
 // --------------------------------------------------------------------
 
 
-const VERSION    = 2.2-2;
+const VERSION    = 2.4;
 const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
 
 
@@ -62,9 +62,11 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
     if (location.href.match(/^http\:\/\/baseball\.fantasysports\.yahoo\.com\/b\d\/\d+\/(team\?mid=)?\d+.*/i)) {
         SCRIPT_MODE = TEAM;
     }
+/*
     else if (location.href.match(/^http\:\/\/baseball\.fantasysports\.yahoo\.com\/b\d\/\d+./i)) {
         SCRIPT_MODE = LEAGUE;
     }
+*/
     else return;
 
 /**********************************************************************************************/
