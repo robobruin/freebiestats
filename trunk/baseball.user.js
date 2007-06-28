@@ -36,8 +36,8 @@
 // --------------------------------------------------------------------
 
 
-const VERSION    = 2.4;
-const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
+const VERSION    = "2.4.2";
+const SCRIPT_URL = 'http://userscripts.org/scripts/source/5143.user.js';
 
 
 (function () {
@@ -56,14 +56,15 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
     const TEAM    = 'team';
     const LEAGUE  = 'league';
 
-    /* run in team mode, league mode, or don't runt at all */
+    /* run in team mode, league mode, or don't run at all */
     var SCRIPT_MODE = null;
 
     if (location.href.match(/^http\:\/\/baseball\.fantasysports\.yahoo\.com\/b\d\/\d+\/(team\?mid=)?\d+.*/i)) {
+        if (location.href.indexOf('positioncaps') != -1) return;
         SCRIPT_MODE = TEAM;
     }
 /*
-    else if (location.href.match(/^http\:\/\/baseball\.fantasysports\.yahoo\.com\/b\d\/\d+./i)) {
+    else if (location.href.match(/^http\:\/\/baseball\.fantasysports\.yahoo\.com\/b\d\/\d+.$/i)) {
         SCRIPT_MODE = LEAGUE;
     }
 */
@@ -1065,11 +1066,14 @@ const SCRIPT_URL = 'http://userscripts.org/scripts/show/5143';
 //2007-05-11: Some refactoring (RMR)
 //2007-05-16: Handle double header games (RMR)
 //2007-05-17: Calculate OBP, SLG, and OPS and display OPS by default (RMR)
+//2007-06-20: Do not show button on team position caps page (RMR)
+//2007-06-27: Only show league mode button when on the league home page (RMR)
 
 //Bug Log
 //2007-05-04: Need to terminate pending events to properly clean up and delete old handles to rows (FIXME)
 //2007-05-09: Need to speed up league wide stats processing (delete attached documents?) (FIXME)
 //2007-05-17: Text alignment attributes in table not taking effect (FIXME)
+//2007-06-29: getXBHorSB() does not parse data correctly for player names of the form F. Last Jr.
 
 //Suggestions Log
 //2007-05-09: Replace pop up menu will pull down menu or something nicer
