@@ -141,7 +141,7 @@ revision
             var totalMade = parseInt(tma.made) + parseInt(ma.made);
             var totalAttempted = parseInt(tma.attempted) + parseInt(ma.attempted);
 
-            var pct = (totalAttempted==0) ? "" : "<br/>" + ((parseFloat(totalMade/totalAttempted).toFixed(3))*100).toFixed(1) + "%";
+            var pct = (totalAttempted==0) ? "" : "<br/>" + parseFloat(totalMade*100/totalAttempted).toFixed(1) + "%";
             return totalMade + "-" + totalAttempted + pct;
         } else {
             return parseInt((oldValue == '' ? 0 : oldValue)) + parseInt(newValue);
