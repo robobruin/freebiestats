@@ -40,7 +40,7 @@ revision
     const BUTTON_LABEL   = 'Show Freebie Stats!';
     const STAT_BUTTON_ID = 'robobruinStatBtn';
 
-    var RE_MADE_ATTEMPT = new RegExp("\\D+-\\D+", 'g');
+    var RE_MADE_ATTEMPT = new RegExp(".+\\D+-\\D+.+", 'g');
     
     function Baller() {
         this._playerId = '';
@@ -137,8 +137,8 @@ revision
     }
 
     function sumValues(oldValue, newValue) {
-        var m = RE_MADE_ATTEMPT.exec(newValue);
-        if (m != null) {
+        newValue = newValue.replace(/^\s+/,"");
+        if (newValue.indexOf('-') > 0) {
             var ma = parseMadeAttempt(newValue);
             var tma = parseMadeAttempt(oldValue);
             var totalMade = parseInt(tma.made) + parseInt(ma.made);
