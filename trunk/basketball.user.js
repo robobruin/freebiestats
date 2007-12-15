@@ -25,6 +25,7 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 
 revision
 2006-Nov-05: don't rely on hard coded offset to find boxscore link
+2007-Dec-15: new boxscore format
 
 */
 
@@ -40,8 +41,7 @@ revision
     const STAT_BUTTON_ID = 'robobruinStatBtn';
 
     var RE_MADE_ATTEMPT = new RegExp("\\D+-\\D+", 'g');
-    var RE_POSITIONS = new RegExp('[GFC]','i');
-
+    
     function Baller() {
         this._playerId = '';
         this._name     = '';
@@ -147,10 +147,13 @@ revision
             var pct = (totalAttempted==0) ? "" : "<br/>" + parseFloat(totalMade*100/totalAttempted).toFixed(1) + "%";
             return totalMade + "-" + totalAttempted + pct;
         } else {
-            if (RE_POSITIONS.exec(newValue) != null || newValue == '') {
+            var oldNumValue = parseInt(oldValue == '' ? 0 : oldValue);
+            var newNumValue = parseInt(newValue);
+            
+            if (isNaN(newNumValue) || isNaN(oldNumValue)) {
                 return '';
             } else {
-                return parseInt((oldValue == '' ? 0 : oldValue)) + parseInt(newValue);
+                return oldNumValue + newNumValue;
             }
         }
     }
