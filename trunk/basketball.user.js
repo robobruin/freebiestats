@@ -87,7 +87,7 @@ revision
         }
 
         div.innerHTML = html;
-        var nodes = xpath(document, "//tr[contains(@class,'ysprow')]/td/a[contains(@href,'" + player.playerId() + "')]");
+        var nodes = xpath(document, "//tr[contains(@class,'ysprow')]/td/a[contains(@href,'/" + player.playerId() + "')]");
         var i = nodes.snapshotLength;
 
         if (!i) {
@@ -149,7 +149,7 @@ revision
         } else {
             var oldNumValue = parseInt(oldValue == '' ? 0 : oldValue);
             var newNumValue = parseInt(newValue);
-            
+
             if (isNaN(newNumValue) || isNaN(oldNumValue)) {
                 return '';
             } else {
