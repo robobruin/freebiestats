@@ -87,13 +87,25 @@ revision
         }
 
         div.innerHTML = html;
-        var nodes = xpath(document, "//tr[contains(@class,'ysprow')]/td/a[contains(@href,'/" + player.playerId() + "')]");
+        var nodes = xpath(document, "//tr[contains(@class,'ysprow')]/td//a[contains(@href,'/" + player.playerId() + "')]");
         var i = nodes.snapshotLength;
 
         if (!i) {
             return null;
         } else {
-            return nodes.snapshotItem(i - 1).parentNode.parentNode.cloneNode(true);
+            var node = nodes.snapshotItem(i - 1);
+            var count = 0;
+            var tmpNode = null;
+            while (count < 4) {
+                if (node.nodeName == 'TR') {
+                    tmpNode = node.cloneNode(true);
+                    break;
+                } else {
+                    node = node.parentNode;
+                }
+                count++;
+            }
+            return tmpNode;
         }
     }
 
