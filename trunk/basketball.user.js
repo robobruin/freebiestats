@@ -94,6 +94,9 @@ revision
             return null;
         } else {
             var node = nodes.snapshotItem(i - 1);
+            var href = node.getAttribute("href");
+            node.setAttribute("href", "http://sports.yahoo.com" + href);
+            node.setAttribute("target", "sports")
             var count = 0;
             var tmpNode = null;
             while (count < 4) {
