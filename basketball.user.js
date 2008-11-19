@@ -26,11 +26,11 @@ http://www.sitening.com/blog/2006/03/29/create-a-modal-dialog-using-css-and-java
 revision
 2006-Nov-05: don't rely on hard coded offset to find boxscore link
 2007-Dec-15: new boxscore format
-
+2008-Nov-18: location regexp
 */
 
 (function () {
-    if (!location.href.match(/^http\:\/\/basketball\.fantasysports\.yahoo\.com\/nba\/\d+\/(team\?mid=)?\d+.*/i)) {
+    if (!location.href.match(/^http\:\/\/basketball\.fantasysports\.yahoo\.com\/nba\/\d+\/(\d+|team.+)/i)) {
         return;
     }
 
@@ -69,8 +69,7 @@ revision
             onload:function(details) {
                 var s = new String(details.responseText);
                 s = s.replace(/\n/g, ' ');
-                s = s.replace(/^.*<style.*<\/style>/gi, ' ');
-                s = s.replace(/^.*<body[^>]*>(.*)<\/body>.*$/gi, "$1");
+                s = s.replace(/^.*<body[^>]*>(.*)<\/body>.*/gi, "$1");
                 var row = processBoxscore(s, player);
                 printStats(row, player);
             }
